@@ -17,6 +17,7 @@ __pycache__/
 # Environment variables
 .env
 .env.*
+!.env.example
 
 # Virtual environment
 venv/
@@ -63,3 +64,14 @@ pip-wheel-metadata/
 build/
 dist/
 *.egg-info/
+
+# Docker
+.dockerignore
+docker-compose.override.yml
+
+# Security reports
+bandit-report.json
+safety-report.json
+
+# CI/CD artifacts
+.github/workflows/test-results.xml
