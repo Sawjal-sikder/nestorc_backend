@@ -1,21 +1,25 @@
 from pathlib import Path
 from datetime import timedelta
+import os
+from dotenv import load_dotenv
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
+
+# Load environment variables from .env file
+load_dotenv(BASE_DIR / '.env')
 
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-&x*hc3xm_88c2t&!nk(f5r7r-0ij#k9vn914a106yt3%6%r3yv'
+SECRET_KEY = os.getenv('SECRET_KEY', 'django-insecure-&x*hc3xm_88c2t&!nk(f5r7r-0ij#k9vn914a106yt3%6%r3yv')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-# DEBUG = False
-DEBUG = False
+DEBUG = os.getenv('DEBUG', 'False').lower() == 'true'
 
-ALLOWED_HOSTS = ["*"]
+ALLOWED_HOSTS = os.getenv('ALLOWED_HOSTS', 'localhost,127.0.0.1').split(',')
 
 
 
@@ -84,23 +88,28 @@ WSGI_APPLICATION = 'project.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
 
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
-    }
-}
+# Get database configuration from environment variables
+DATABASE_ENGINE = os.getenv('DATABASE_ENGINE', 'django.db.backends.sqlite3')
 
-# DATABASES = {
-#     'default': {
-#         'ENGINE': 'django.db.backends.postgresql',
-#         'NAME': 'basketball',
-#         'USER': 'basketball',
-#         'PASSWORD': 'testpassword123',
-#         'HOST': '127.0.0.1',
-#         'PORT': '5432',
-#     }
-# }
+if DATABASE_ENGINE == 'django.db.backends.sqlite3':
+    DATABASES = {
+        'default': {
+            'ENGINE': DATABASE_ENGINE,
+            'NAME': BASE_DIR / os.getenv('DATABASE_NAME', 'db.sqlite3'),
+        }
+    }
+else:
+    # PostgreSQL or other database configuration
+    DATABASES = {
+        'default': {
+            'ENGINE': DATABASE_ENGINE,
+            'NAME': os.getenv('DATABASE_NAME'),
+            'USER': os.getenv('DATABASE_USER'),
+            'PASSWORD': os.getenv('DATABASE_PASSWORD'),
+            'HOST': os.getenv('DATABASE_HOST', '127.0.0.1'),
+            'PORT': os.getenv('DATABASE_PORT', '5432'),
+        }
+    }
 
 
 # Password validation
@@ -136,14 +145,11 @@ USE_TZ = True
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.2/howto/static-files/
-from pathlib import Path
 
-BASE_DIR = Path(__file__).resolve().parent.parent
+STATIC_URL = os.getenv('STATIC_URL', '/static/')
+MEDIA_URL = os.getenv('MEDIA_URL', '/media/')
 
-STATIC_URL = '/static/'    # It's good to add leading slash
-MEDIA_URL = '/media/'      # Same here
-
-STATICFILES_DIRS = [BASE_DIR / 'static']  # This is fine, no trailing comma needed here
+STATICFILES_DIRS = [BASE_DIR / 'static']
 MEDIA_ROOT = BASE_DIR / 'media'
 
 # Add STATIC_ROOT for collectstatic (production use)
@@ -157,7 +163,7 @@ STATIC_ROOT = BASE_DIR / 'staticfiles'
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 
-CORS_ALLOW_ALL_ORIGINS = True
+CORS_ALLOW_ALL_ORIGINS = os.getenv('CORS_ALLOW_ALL_ORIGINS', 'True').lower() == 'true'
 
 
 AUTH_USER_MODEL = 'accounts.CustomUser'
@@ -177,10 +183,10 @@ REST_FRAMEWORK = {
 }
 
 SIMPLE_JWT = {
-    'ACCESS_TOKEN_LIFETIME': timedelta(days=15),
-    'REFRESH_TOKEN_LIFETIME': timedelta(days=30),
-    'ROTATE_REFRESH_TOKENS': False,
-    'BLACKLIST_AFTER_ROTATION': True,
+    'ACCESS_TOKEN_LIFETIME': timedelta(days=int(os.getenv('JWT_ACCESS_TOKEN_LIFETIME_DAYS', '15'))),
+    'REFRESH_TOKEN_LIFETIME': timedelta(days=int(os.getenv('JWT_REFRESH_TOKEN_LIFETIME_DAYS', '30'))),
+    'ROTATE_REFRESH_TOKENS': os.getenv('JWT_ROTATE_REFRESH_TOKENS', 'False').lower() == 'true',
+    'BLACKLIST_AFTER_ROTATION': os.getenv('JWT_BLACKLIST_AFTER_ROTATION', 'True').lower() == 'true',
 
     'AUTH_HEADER_TYPES': ('Bearer',),
     'AUTH_TOKEN_CLASSES': ('rest_framework_simplejwt.tokens.AccessToken',),
@@ -202,7 +208,7 @@ AUTH_PASSWORD_VALIDATORS = [
     },
     {
         'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator',
-        'OPTIONS': {'min_length': 8}
+        'OPTIONS': {'min_length': int(os.getenv('MIN_PASSWORD_LENGTH', '8'))}
     },
     {
         'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator',
@@ -214,12 +220,12 @@ AUTH_PASSWORD_VALIDATORS = [
 
 
 #  for email setup
-EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
-EMAIL_HOST = 'smtp.gmail.com'
-EMAIL_PORT = 587
-EMAIL_USE_TLS = True
-EMAIL_HOST_USER = 'imcominguniversity@gmail.com'
-EMAIL_HOST_PASSWORD = 'fawo ntxm usik iuxn'  
+EMAIL_BACKEND = os.getenv('EMAIL_BACKEND', 'django.core.mail.backends.smtp.EmailBackend')
+EMAIL_HOST = os.getenv('EMAIL_HOST', 'smtp.gmail.com')
+EMAIL_PORT = int(os.getenv('EMAIL_PORT', '587'))
+EMAIL_USE_TLS = os.getenv('EMAIL_USE_TLS', 'True').lower() == 'true'
+EMAIL_HOST_USER = os.getenv('EMAIL_HOST_USER')
+EMAIL_HOST_PASSWORD = os.getenv('EMAIL_HOST_PASSWORD')  
 
 
 
@@ -229,7 +235,7 @@ AUTHENTICATION_BACKENDS = [
     'allauth.account.auth_backends.AuthenticationBackend',
 ]
 
-SITE_ID = 1
+SITE_ID = int(os.getenv('SITE_ID', '1'))
 
 # Optional: JWT instead of token
 REST_USE_JWT = True
@@ -259,48 +265,26 @@ SOCIALACCOUNT_ADAPTER = 'allauth.socialaccount.adapter.DefaultSocialAccountAdapt
 SOCIALACCOUNT_PROVIDERS = {
     'google': {
         'APP': {
-            'client_id': '563464993336-q.apps.googleusercontent.com',
-            'secret': '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',
-        },
-        'SCOPE': ['profile', 'email'],
-        'AUTH_PARAMS': {'access_type': 'online'},
-    },
-    'apple': {
-        'APP': {
-            'client_id': 'com.example.app',  # Your Apple Service ID
-            'secret': '-----BEGIN PRIVATE KEY-----\nMIIEvgIBADANBgkq...\n-----END PRIVATE KEY-----',  # Apple private key
-            'key': 'ABC123DEFG',  # Key ID from Apple Developer portal
-            'team_id': 'XYZ9876543',  # Team ID from Apple Developer account
-        },
-        'SCOPE': ['name', 'email'],
-        'APP_ID': 'com.example.app',  # Same as client_id
-    }
-}
-
-
-SOCIALACCOUNT_PROVIDERS = {
-    'google': {
-        'APP': {
-            'client_id': '563464993336-q.apps.googleusercontent.com',
-            'secret': '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',
+            'client_id': os.getenv('GOOGLE_CLIENT_ID'),
+            'secret': os.getenv('GOOGLE_CLIENT_SECRET'),
         },
         'SCOPE': ['profile', 'email'],
         'AUTH_PARAMS': {'access_type': 'online'},
     }
 }
 
-LOGIN_URL = '/auth/login/'
-LOGOUT_URL = '/auth/logout/' 
-LOGIN_REDIRECT_URL = '/'  
-ACCOUNT_LOGOUT_REDIRECT_URL = '/'
-ACCOUNT_SIGNUP_REDIRECT_URL = '/accounts/email-verification-sent/'
-ACCOUNT_EMAIL_VERIFICATION = "mandatory"
+LOGIN_URL = os.getenv('LOGIN_URL', '/auth/login/')
+LOGOUT_URL = os.getenv('LOGOUT_URL', '/auth/logout/')
+LOGIN_REDIRECT_URL = os.getenv('LOGIN_REDIRECT_URL', '/')
+ACCOUNT_LOGOUT_REDIRECT_URL = os.getenv('ACCOUNT_LOGOUT_REDIRECT_URL', '/')
+ACCOUNT_SIGNUP_REDIRECT_URL = os.getenv('ACCOUNT_SIGNUP_REDIRECT_URL', '/accounts/email-verification-sent/')
+ACCOUNT_EMAIL_VERIFICATION = os.getenv('ACCOUNT_EMAIL_VERIFICATION', 'mandatory')
 SOCIALACCOUNT_ADAPTER = 'accounts.adapter.MySocialAccountAdapter'
 
 
 
-CELERY_BROKER_URL = 'redis://localhost:6379/0'
-CELERY_RESULT_BACKEND = 'redis://localhost:6379/1'
+CELERY_BROKER_URL = os.getenv('CELERY_BROKER_URL', 'redis://localhost:6379/0')
+CELERY_RESULT_BACKEND = os.getenv('CELERY_RESULT_BACKEND', 'redis://localhost:6379/1')
 
 CELERY_ACCEPT_CONTENT = ['json']
 CELERY_TASK_SERIALIZER = 'json'
