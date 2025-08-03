@@ -34,9 +34,8 @@ jobs:
 
       - name: Run tests
         run: |
-          python manage.py test --settings=project.test_settings
+          python manage.py test
         env:
-          DJANGO_SETTINGS_MODULE: project.test_settings
           SECRET_KEY: "test-secret-key-for-github-actions"
           STRIPE_SECRET_KEY: "sk_test_fake_key_for_testing"
           STRIPE_PUBLISHABLE_KEY: "pk_test_fake_key_for_testing"
@@ -44,4 +43,4 @@ jobs:
 
       - name: Run system check
         run: |
-          python manage.py check --settings=project.test_settings
+          python manage.py check
