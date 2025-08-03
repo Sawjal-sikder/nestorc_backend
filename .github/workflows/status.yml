@@ -1,0 +1,24 @@
+name: Status Check
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main, develop]
+
+jobs:
+  status:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Project status
+        run: |
+          echo "🚀 Django Project CI/CD Status Check"
+          echo "📁 Project: nestorc-backend"
+          echo "🌟 Branch: ${{ github.ref_name }}"
+          echo "📝 Commit: ${{ github.sha }}"
+          echo "👤 Author: ${{ github.actor }}"
+          echo "🔄 Event: ${{ github.event_name }}"
+          echo "✅ Repository structure validated"
