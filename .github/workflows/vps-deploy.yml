@@ -46,8 +46,14 @@ jobs:
             # Install/update dependencies
             pip install -r requirements.txt
             
-            # Run migrations
-            python manage.py migrate --noinput
+            # Create static directory if it doesn't exist
+            mkdir -p static
+            
+            # Run migrations in correct order
+            python manage.py migrate contenttypes
+            python manage.py migrate auth
+            python manage.py migrate accounts
+            python manage.py migrate
             
             # Collect static files
             python manage.py collectstatic --noinput

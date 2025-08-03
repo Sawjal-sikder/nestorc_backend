@@ -76,9 +76,21 @@ jobs:
           echo "CORS_ALLOW_ALL_ORIGINS=True" >> .env
           echo "SITE_ID=1" >> .env
           echo "ACCOUNT_EMAIL_VERIFICATION=none" >> .env
+          echo "STATIC_URL=/static/" >> .env
+          echo "MEDIA_URL=/media/" >> .env
 
-      - name: Run migrations
+      - name: Create static directory
         run: |
+          mkdir -p static
+
+      - name: Run migrations in correct order
+        run: |
+          # Apply contenttypes and auth migrations first
+          python manage.py migrate contenttypes
+          python manage.py migrate auth
+          # Apply accounts migrations
+          python manage.py migrate accounts
+          # Apply all remaining migrations
           python manage.py migrate
 
       - name: Run tests
@@ -191,7 +203,13 @@ jobs:
 
       - name: Run migrations
         run: |
-          python manage.py migrate --noinput
+          # Create static directory
+          mkdir -p static
+          # Run migrations in correct order
+          python manage.py migrate contenttypes
+          python manage.py migrate auth
+          python manage.py migrate accounts
+          python manage.py migrate
 
       - name: Collect static files
         run: |
@@ -239,7 +257,13 @@ jobs:
 
       - name: Run migrations
         run: |
-          python manage.py migrate --noinput
+          # Create static directory
+          mkdir -p static
+          # Run migrations in correct order
+          python manage.py migrate contenttypes
+          python manage.py migrate auth
+          python manage.py migrate accounts
+          python manage.py migrate
 
       - name: Collect static files
         run: |
