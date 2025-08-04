@@ -8,6 +8,7 @@ from .models import PasswordResetCode
 User = get_user_model()
 from django.contrib.auth.password_validation import validate_password
 from .models import PasswordResetCode
+from .celery_task import Celery_send_mail
 
 
 
@@ -100,9 +101,8 @@ class ResendCodeSerializer(serializers.Serializer):
         return self.user
 
 
-
 # for forgot password
-class PasswordResetCodeRequestSerializer(serializers.Serializer):
+class ForgotPasswordSerializer(serializers.Serializer):
     email = serializers.EmailField()
 
     def validate_email(self, value):
@@ -113,12 +113,24 @@ class PasswordResetCodeRequestSerializer(serializers.Serializer):
     def save(self):
         user = User.objects.get(email=self.validated_data['email'])
         reset_code = PasswordResetCode.objects.create(user=user)
-        user.email_user(
-            "Password Reset Code",
-            f"Your password reset code is: {reset_code.code}",
+        # user.email_user(
+        #     "Password Reset Code",
+        #     f"Your password reset code is: {reset_code.code}",
+        # )
+        Celery_send_mail.delay(
+            email=user.email,
+            message = (
+                f"Hello Sir/Madam,\n\n"
+                f"We received a request to reset your password. "
+                f"Use the code below to reset your password:\n\n"
+                f"Password Reset Code: {reset_code.code}\n\n"
+                f"If you didn’t request this, you can ignore this email.\n\n"
+                f"Thanks,\n"
+                f"Support Team"
+            ),
+                subject="Reset Your Password – Action Required"
         )
-        
-        
+        return user
 
 
 
@@ -141,6 +153,32 @@ class VerifyResetCodeSerializer(serializers.Serializer):
         self.user = user
         self.reset_code = reset_code
         return attrs
+    
+    
+class VerfifyCodeSerializer(serializers.Serializer):
+    email = serializers.EmailField()
+    code = serializers.CharField(max_length=6)
+
+    def validate(self, attrs):
+        try:
+            user = CustomUser.objects.get(email=attrs['email'])
+            reset_code = PasswordResetCode.objects.get(user=user, code=attrs['code'], is_used=False)
+        except PasswordResetCode.DoesNotExist:
+            raise serializers.ValidationError("Invalid or expired verification code.")
+
+        if reset_code.is_expired():
+            raise serializers.ValidationError("Verification code has expired.")
+
+        self.user = user
+        self.reset_code = reset_code
+        return attrs
+    def save(self):
+        self.user.is_active = False
+        self.user.save()
+        self.reset_code.is_used = False
+        self.reset_code.save()
+        return self.user
+
 
 
 class SetNewPasswordSerializer(serializers.Serializer):

@@ -40,8 +40,8 @@ class ResendCodeView(generics.CreateAPIView):
         return Response({"message": "A new verification code has been sent to your email."}, status=status.HTTP_200_OK)
 
 
-class RequestPasswordResetCodeView(generics.GenericAPIView):
-    serializer_class = PasswordResetCodeRequestSerializer
+class ForgotPasswordView(generics.GenericAPIView):
+    serializer_class = ForgotPasswordSerializer
     permission_classes = [permissions.AllowAny]
 
     def post(self, request, *args, **kwargs):
@@ -49,6 +49,26 @@ class RequestPasswordResetCodeView(generics.GenericAPIView):
         serializer.is_valid(raise_exception=True)
         serializer.save()
         return Response({"message": "Reset code sent to email."}, status=status.HTTP_200_OK)
+    
+    
+class VerifyCodeView(generics.GenericAPIView):
+    serializer_class = VerfifyCodeSerializer
+    permission_classes = [permissions.AllowAny]
+
+    def post(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        # You can access validated user and code here if needed:
+        user = serializer.user
+        reset_code = serializer.reset_code
+
+        # Optionally mark the code as not used
+        reset_code.is_used = False
+        reset_code.save()
+
+        return Response({"message": "Code verified successfully."}, status=status.HTTP_200_OK)
+
 
 class SetNewPasswordView(generics.GenericAPIView):
     serializer_class = SetNewPasswordSerializer
