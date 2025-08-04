@@ -113,13 +113,10 @@ class ForgotPasswordSerializer(serializers.Serializer):
     def save(self):
         user = User.objects.get(email=self.validated_data['email'])
         reset_code = PasswordResetCode.objects.create(user=user)
-        # user.email_user(
-        #     "Password Reset Code",
-        #     f"Your password reset code is: {reset_code.code}",
-        # )
+        # Send reset code via email
         Celery_send_mail.delay(
             email=user.email,
-            message = (
+            message=(
                 f"Hello Sir/Madam,\n\n"
                 f"We received a request to reset your password. "
                 f"Use the code below to reset your password:\n\n"
