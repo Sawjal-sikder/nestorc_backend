@@ -11,6 +11,7 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('api/', include('accounts.urls')),
     path('accounts/', include('allauth.urls')),
+    path('api/services/', include('services.urls')),
     path('', lambda request: HttpResponseRedirect('/api/auth/register/')),
 
 ]
