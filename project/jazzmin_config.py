@@ -9,7 +9,7 @@ JAZZMIN_SETTINGS = {
     "navigation_expanded": True,
     "topmenu_links": [
         {"name": "Home", "url": "admin:index", "permissions": ["accounts.view_customuser"]},
-        {"name": "📄 Download All Users PDF", "url": "admin:download_all_users_pdf", "permissions": ["accounts.view_customuser"], "new_window": True},
+      #   {"name": "📄 Download All Users PDF", "url": "admin:download_all_users_pdf", "permissions": ["accounts.view_customuser"], "new_window": True},
     ],
     "app_labels": {
         "accounts": "",
