@@ -26,6 +26,7 @@ ALLOWED_HOSTS = os.getenv('ALLOWED_HOSTS', 'localhost,127.0.0.1').split(',')
 # Application definition
 
 INSTALLED_APPS = [
+    'jazzmin',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -71,7 +72,7 @@ ROOT_URLCONF = 'project.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
+        'DIRS': [BASE_DIR / 'templates'],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -293,3 +294,20 @@ CELERY_RESULT_SERIALIZER = 'json'
 
 USE_TZ = True
 TIME_ZONE = 'Asia/Dhaka'
+
+
+
+# Import Jazzmin configuration from separate file
+from .jazzmin_config import JAZZMIN_SETTINGS, JAZZMIN_UI_TWEAKS
+
+# Apply environment-specific Jazzmin settings
+try:
+    if DEBUG:
+        from .jazzmin_config import JAZZMIN_DEVELOPMENT_SETTINGS
+        JAZZMIN_SETTINGS.update(JAZZMIN_DEVELOPMENT_SETTINGS)
+    else:
+        from .jazzmin_config import JAZZMIN_PRODUCTION_SETTINGS
+        JAZZMIN_SETTINGS.update(JAZZMIN_PRODUCTION_SETTINGS)
+except ImportError:
+    # Fallback if development/production settings are not defined
+    pass

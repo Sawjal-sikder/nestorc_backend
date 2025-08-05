@@ -3,8 +3,14 @@ from django.contrib.auth.admin import UserAdmin
 from django import forms
 from django.utils.translation import gettext_lazy as _
 from django.contrib.auth.forms import ReadOnlyPasswordHashField
+from django.http import HttpResponse
+from django.urls import path, reverse
+from django.utils.html import format_html
+from django.shortcuts import redirect
 
 from .models import CustomUser, PasswordResetCode
+from .pdf_export import download_user_pdf, download_all_users_pdf
+from .excel_export import download_all_users_excel
 
 # Form to create new users in admin
 class CustomUserCreationForm(forms.ModelForm):
@@ -39,7 +45,6 @@ class CustomUserChangeForm(forms.ModelForm):
         ),
     )
 
-
     class Meta:
         model = CustomUser
         fields = "__all__"
@@ -49,13 +54,14 @@ class CustomUserAdmin(UserAdmin):
     add_form = CustomUserCreationForm
     form = CustomUserChangeForm
     model = CustomUser
+    actions = [download_user_pdf]
 
-    list_display = ("full_name","phone_number","email", "is_staff", "is_active")
+    list_display = ("full_name", "phone_number", "email", "is_staff", "is_active")
     list_filter = ("is_staff", "is_active")
 
     fieldsets = (
         (None, {"fields": ("email", "password")}),
-        ("Personal info", {"fields": ("full_name","phone_number")}),  
+        ("Personal info", {"fields": ("full_name", "phone_number")}),  
         ("Permissions", {"fields": ("is_staff", "is_active", "is_superuser", "groups", "user_permissions")}),
         ("Important dates", {"fields": ("last_login",)}),
     )
@@ -65,12 +71,28 @@ class CustomUserAdmin(UserAdmin):
             "fields": ("email", "password1", "password2", "is_staff", "is_active"),
         }),
     )
-    search_fields = ("email",)
+    search_fields = ("email", "full_name")
     ordering = ("email",)
+
+    def get_urls(self):
+        """Add custom URLs for PDF and Excel downloads"""
+        urls = super().get_urls()
+        custom_urls = [
+            path('download-all-pdf/', self.admin_site.admin_view(download_all_users_pdf), 
+                 name='download_all_users_pdf'),
+            path('download-all-excel/', self.admin_site.admin_view(download_all_users_excel), 
+                 name='download_all_users_excel'),
+        ]
+        return custom_urls + urls
+
+    def changelist_view(self, request, extra_context=None):
+        """Add custom context to change list view"""
+        extra_context = extra_context or {}
+        extra_context['download_all_url'] = reverse('admin:download_all_users_pdf')
+        return super().changelist_view(request, extra_context=extra_context)
 
 
 admin.site.register(CustomUser, CustomUserAdmin)
-
 
 
 class PasswordResetCodeAdmin(admin.ModelAdmin):
@@ -82,4 +104,5 @@ class PasswordResetCodeAdmin(admin.ModelAdmin):
         return obj.is_expired()
     is_expired_display.boolean = True
     is_expired_display.short_description = 'Expired?'
+
 admin.site.register(PasswordResetCode, PasswordResetCodeAdmin)
