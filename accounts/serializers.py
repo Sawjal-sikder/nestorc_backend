@@ -235,3 +235,9 @@ class ChangePasswordSerializer(serializers.Serializer):
     
 class LogoutSerializer(serializers.Serializer):
     refresh = serializers.CharField()
+
+
+class userListSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = ['id', 'full_name', 'email', 'phone_number', 'is_active']

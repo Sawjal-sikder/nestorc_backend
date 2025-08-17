@@ -20,3 +20,23 @@ class Venue(models.Model):
 
     def __str__(self):
         return self.venue_name
+    
+    
+class GeoFenced(models.Model):
+    title = models.CharField(max_length=100)
+
+    def __str__(self):
+        return self.title
+
+
+class LatLng(models.Model):
+    geo_fenced_area = models.ForeignKey(
+        GeoFenced,
+        related_name="polygon_points",
+        on_delete=models.CASCADE
+    )
+    latitude = models.FloatField()
+    longitude = models.FloatField()
+
+    def __str__(self):
+        return f"({self.latitude}, {self.longitude})"

@@ -86,3 +86,15 @@ class VenueByCityView(generics.ListAPIView):
         queryset = self.get_queryset()
         serializer = self.get_serializer(queryset, many=True)
         return Response(serializer.data)
+    
+    
+    
+class GeoFencedViews(generics.ListCreateAPIView):
+    queryset = GeoFenced.objects.all()
+    serializer_class = GeoFencedSerializer
+    permission_classes = [permissions.AllowAny]
+
+    def perform_create(self, serializer):
+        if not self.request.user.is_superuser:
+            raise PermissionError("Only superusers can create geofences.")
+        serializer.save()

@@ -122,3 +122,16 @@ class LogoutView(generics.GenericAPIView):
             return Response({"detail": "Successfully logged out."}, status=status.HTTP_205_RESET_CONTENT)
         except TokenError:
             return Response({"detail": "Invalid or expired token."}, status=status.HTTP_400_BAD_REQUEST)
+        
+        
+        
+class UserListView(generics.ListAPIView):
+    serializer_class = userListSerializer
+    queryset = User.objects.all()
+    permission_classes = [permissions.IsAdminUser]
+
+
+class UserDetailsUpdateView(generics.RetrieveUpdateAPIView):
+    serializer_class = userListSerializer
+    queryset = User.objects.all()
+    permission_classes = [permissions.IsAdminUser]

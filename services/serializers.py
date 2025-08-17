@@ -57,3 +57,29 @@ class VenueSerializer(serializers.ModelSerializer):
             venue.save()
 
         return venue
+
+
+class LatLngSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = LatLng
+        fields = ["latitude", "longitude"]
+
+
+class GeoFencedSerializer(serializers.ModelSerializer):
+    polygon_points = LatLngSerializer(many=True)
+
+    class Meta:
+        model = GeoFenced
+        fields = ["id", "title", "polygon_points"]
+
+    def validate_polygon_points(self, value):
+        if len(value) < 4:
+            raise serializers.ValidationError("A polygon must have at least 4 points.")
+        return value
+
+    def create(self, validated_data):
+        polygon_points_data = validated_data.pop("polygon_points")
+        geo_fenced_area = GeoFenced.objects.create(**validated_data)
+        for point_data in polygon_points_data:
+            LatLng.objects.create(geo_fenced_area=geo_fenced_area, **point_data)
+        return geo_fenced_area
