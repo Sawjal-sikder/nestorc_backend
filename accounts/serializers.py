@@ -241,3 +241,10 @@ class userListSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = ['id', 'full_name', 'email', 'phone_number', 'is_active']
+        
+        
+        
+class UserActivateSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = ['is_active']

@@ -2,6 +2,7 @@ from rest_framework import generics, status, permissions
 from rest_framework.response import Response
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework_simplejwt.exceptions import TokenError
+from accounts.export_report import download_all_user_excel, download_all_user_pdf
 from .serializers import *
 
 class RegisterView(generics.CreateAPIView):
@@ -135,3 +136,18 @@ class UserDetailsUpdateView(generics.RetrieveUpdateAPIView):
     serializer_class = userListSerializer
     queryset = User.objects.all()
     permission_classes = [permissions.IsAdminUser]
+
+
+class UserActivateView(generics.UpdateAPIView):
+    serializer_class = UserActivateSerializer
+    queryset = User.objects.all()
+    permission_classes = [permissions.IsAdminUser]
+    lookup_field = 'id'
+
+
+def download_all_user_view(request):
+    return download_all_user_pdf(request)
+
+
+def download_all_user_excel_view(request):
+    return download_all_user_excel(request)

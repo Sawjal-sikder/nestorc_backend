@@ -17,4 +17,7 @@ urlpatterns = [
     # for admin
     path('auth/users/', UserListView.as_view(), name='user_list'),
     path('auth/users/<int:pk>/', UserDetailsUpdateView.as_view(), name='user_details_update'),
+    path('auth/users/activate/<int:id>/', UserActivateView.as_view(), name='user_activate'),
+    path('auth/users/download/pdf/', download_all_user_view, name='download_all_users_pdf'),
+    path('auth/users/download/excel/', download_all_user_excel_view, name='download_all_users_excel'),
 ]
