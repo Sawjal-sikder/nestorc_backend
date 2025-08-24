@@ -3,6 +3,8 @@ from rest_framework.response import Response
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework_simplejwt.exceptions import TokenError
 from accounts.export_report import download_all_user_excel, download_all_user_pdf
+from rest_framework.parsers import MultiPartParser, FormParser
+
 from .serializers import *
 
 class RegisterView(generics.CreateAPIView):
@@ -137,9 +139,10 @@ class UserDetailsUpdateView(generics.RetrieveUpdateAPIView):
     queryset = User.objects.all()
     permission_classes = [permissions.IsAdminUser]
 
-class UserUpdateView(generics.RetrieveUpdateAPIView): 
-    serializer_class = userListSerializer
+class UserUpdateView(generics.RetrieveUpdateAPIView):
+    serializer_class = UserUpdateSerializer  
     permission_classes = [permissions.IsAuthenticated]
+    parser_classes = [MultiPartParser, FormParser]
 
     def get_object(self):
         return self.request.user

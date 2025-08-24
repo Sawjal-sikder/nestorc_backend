@@ -243,24 +243,24 @@ class userListSerializer(serializers.ModelSerializer):
         fields = ['id', 'full_name', 'email', 'phone_number', 'is_active']
 
 class UserUpdateSerializer(serializers.ModelSerializer):
+    profile_image = serializers.ImageField(use_url=True, required=False)
 
     class Meta:
         model = User
-        fields = ['id', 'full_name', 'email', 'phone_number', 'is_active']
+        fields = ['id', 'full_name', 'email', 'phone_number', 'profile_image', 'is_active']
         read_only_fields = ['id', 'is_active']
-        
-        # email or phone number change if value not duplicate to update
-        def validate_email(self, value):
-            user = self.instance
-            if User.objects.exclude(id=user.id).filter(email=value).exists():
-                raise serializers.ValidationError("This email is already in use.")
-            return value
 
-        def validate_phone_number(self, value):
-            user = self.instance
-            if User.objects.exclude(id=user.id).filter(phone_number=value).exists():
-                raise serializers.ValidationError("This phone number is already in use.")
-            return value
+    def validate_email(self, value):
+        user = self.instance
+        if User.objects.exclude(id=user.id).filter(email=value).exists():
+            raise serializers.ValidationError("This email is already in use.")
+        return value
+
+    def validate_phone_number(self, value):
+        user = self.instance
+        if User.objects.exclude(id=user.id).filter(phone_number=value).exists():
+            raise serializers.ValidationError("This phone number is already in use.")
+        return value
 
 
 class UserActivateSerializer(serializers.ModelSerializer):
