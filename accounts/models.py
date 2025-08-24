@@ -73,4 +73,13 @@ class PasswordResetCode(models.Model):
         
     def is_expired(self):
         return self.created_at + timedelta(minutes=2) < timezone.now()
-    
+
+
+class Driving_license(models.Model):
+    user = models.OneToOneField(User, on_delete=models.CASCADE)
+    license_image = models.ImageField(upload_to='driving_licenses/')
+    create_at = models.DateTimeField(auto_now_add=True)
+    update_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return f"Driving License - {self.user.full_name}"

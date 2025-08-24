@@ -137,6 +137,13 @@ class UserDetailsUpdateView(generics.RetrieveUpdateAPIView):
     queryset = User.objects.all()
     permission_classes = [permissions.IsAdminUser]
 
+class UserUpdateView(generics.RetrieveUpdateAPIView): 
+    serializer_class = userListSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get_object(self):
+        return self.request.user
+
 
 class UserActivateView(generics.UpdateAPIView):
     serializer_class = UserActivateSerializer

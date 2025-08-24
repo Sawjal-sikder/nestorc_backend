@@ -3,11 +3,13 @@ from rest_framework import generics, status, permissions
 from rest_framework.response import Response
 from .models import *
 from .serializers import *
+from rest_framework.views import APIView
+from rest_framework import status
+from .utils import haversine
 
 class CityView(generics.ListCreateAPIView):
       serializer_class = CitySerializer
       permission_classes = [permissions.AllowAny]
-      parser_classes = [MultiPartParser, FormParser]
 
 
       def get(self, request, *args, **kwargs):
@@ -98,3 +100,33 @@ class GeoFencedViews(generics.ListCreateAPIView):
         if not self.request.user.is_superuser:
             raise PermissionError("Only superusers can create geofences.")
         serializer.save()
+        
+        
+
+class NearestVenueView(APIView):
+    def get(self, request):
+        try:
+            user_lat = float(request.query_params.get("lat"))
+            user_lon = float(request.query_params.get("lon"))
+        except (TypeError, ValueError):
+            return Response({"error": "lat and lon query parameters are required"}, status=status.HTTP_400_BAD_REQUEST)
+
+        venues = Venue.objects.all()
+
+        venue_list = []
+        for v in venues:
+            distance = haversine(user_lat, user_lon, v.latitude, v.longitude)
+            venue_list.append({
+                "id": v.id,
+                "city": v.city_id,
+                "venue_name": v.venue_name,
+                "image": v.image.url if v.image else None,
+                "latitude": v.latitude,
+                "longitude": v.longitude,
+                "distance_km": round(distance, 2),
+            })
+
+        # Sort by distance and get nearest 2
+        nearest = sorted(venue_list, key=lambda x: x["distance_km"])[:2]
+
+        return Response(nearest, status=status.HTTP_200_OK)

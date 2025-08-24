@@ -7,6 +7,7 @@ urlpatterns = [
 #     for venues
     path('venues/', VenueCreateListView.as_view(), name='venue-list'),
     path('venues/city/<int:city_id>/', VenueByCityView.as_view(), name='venue-list-by-city'),
+    path("nearest-venues/", NearestVenueView.as_view(), name="nearest-venues"),
     # GeoFencedViews
     path('geofences/', GeoFencedViews.as_view(), name='geofence-list'),
 ]
