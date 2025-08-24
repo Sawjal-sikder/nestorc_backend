@@ -10,13 +10,17 @@ from .serializers import *
 class RegisterView(generics.CreateAPIView):
     serializer_class = RegisterSerializer
     permission_classes = [permissions.AllowAny]
+    parser_classes = [MultiPartParser, FormParser]
 
     def create(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         user = serializer.save()
         user_data = self.get_serializer(user).data  
-        return Response({"message": "Your account has been created successfully. You can now log in."}, status=status.HTTP_201_CREATED)
+        return Response({
+            "message": "Your account has been created successfully. You can now log in.",
+            # "user": user_data
+            }, status=status.HTTP_201_CREATED)
 
 class VerifyCodeView(generics.CreateAPIView):
     serializer_class = VerifyActiveCodeSerializer

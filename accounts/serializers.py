@@ -24,7 +24,7 @@ class RegisterSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = CustomUser
-        fields = ['email', 'full_name', 'phone_number', 'password', 'password2']
+        fields = ['email', 'full_name', 'phone_number', 'driving_license', 'password', 'password2']
 
     def validate(self, attrs):
         if attrs['password'] != attrs['password2']:
@@ -37,13 +37,6 @@ class RegisterSerializer(serializers.ModelSerializer):
         user = CustomUser.objects.create_user(**validated_data)
         user.is_active = True
         user.save() 
-
-        # # Generate and email verification code
-        # active_code = PasswordResetCode.objects.create(user=user)
-        # user.email_user(
-        #     "Email Verification Code",
-        #     f"Your verification code is: {active_code.code}"
-        # )
 
         return user
 

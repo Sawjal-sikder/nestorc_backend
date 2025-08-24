@@ -9,13 +9,18 @@ class CitySerializer(serializers.ModelSerializer):
         model = City
         fields = ['id', 'name', 'description']
 
+class PlaceTypeSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = PlaceType
+        fields = ['id', 'name', 'description']
 
 class VenueSerializer(serializers.ModelSerializer):
     distance_km = serializers.FloatField(read_only=True)
 
     class Meta:
         model = Venue
-        fields = ["id", "city", "venue_name", "image", "description", "latitude", "longitude", "distance_km"]
+        fields = ["id", "city", "type_of_place", "venue_name", "image", "description", "latitude", "longitude", "distance_km"]
 
 
 

@@ -53,9 +53,13 @@ class CityDeleteUpdateView(generics.RetrieveUpdateDestroyAPIView):
                   {"message": "City deleted successfully"},
                   status=status.HTTP_200_OK 
             )
-        
-        
-        
+
+class PlaceTypeView(generics.ListCreateAPIView):
+    queryset = PlaceType.objects.all()
+    serializer_class = PlaceTypeSerializer
+    permission_classes = [permissions.IsAdminUser]
+
+
 class VenueCreateListView(generics.ListCreateAPIView):
     serializer_class = VenueSerializer
     permission_classes = [permissions.AllowAny]
