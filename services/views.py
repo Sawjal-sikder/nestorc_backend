@@ -6,6 +6,8 @@ from .serializers import *
 from rest_framework.views import APIView
 from rest_framework import status
 from .utils import haversine
+from django.shortcuts import get_object_or_404
+
 
 class CityView(generics.ListCreateAPIView):
       serializer_class = CitySerializer
@@ -80,6 +82,11 @@ class VenueCreateListView(generics.ListCreateAPIView):
             return Response(self.get_serializer(venue).data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
   
+class VenueDetailView(generics.RetrieveUpdateDestroyAPIView):
+    queryset = Venue.objects.all()
+    serializer_class = VenueSerializer
+  
+  
 class VenueByCityView(generics.ListAPIView):
     serializer_class = VenueSerializer
     permission_classes = [permissions.AllowAny]
@@ -92,9 +99,40 @@ class VenueByCityView(generics.ListAPIView):
         queryset = self.get_queryset()
         serializer = self.get_serializer(queryset, many=True)
         return Response(serializer.data)
+
+
+class PlaceWiseVenueView(APIView):
+    serializer_class = PlaceWiseVenueSerializer
+    permission_classes = [permissions.AllowAny]
+
+    def get(self, request):
+        data = {}
+        categories = PlaceType.objects.prefetch_related("venues").all()
+        for category in categories:
+            venues = category.venues.all()[:5]  # limit to 5 venues
+            data[category.name] = VenueSerializer(venues, many=True).data
+        return Response(data)
+
+
+class ScavengerHuntViews(generics.ListCreateAPIView):
+    queryset = ScavengerHunt.objects.all()
+    serializer_class = ScavengerCreateHuntSerializer
     
+
+class UserScavengerHuntUpdateView(generics.UpdateAPIView):
+    serializer_class = UserScavengerHuntUpdateSerializer
+
+    def get_object(self):
+        scavenger_hunt_id = self.kwargs["pk"]
+        obj, _ = UserScavengerHunt.objects.get_or_create(
+            user=self.request.user,
+            scavenger_hunt_id=scavenger_hunt_id,
+        )
+        return obj
+
+ 
     
-    
+
 class GeoFencedViews(generics.ListCreateAPIView):
     queryset = GeoFenced.objects.all()
     serializer_class = GeoFencedSerializer

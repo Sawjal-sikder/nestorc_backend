@@ -4,8 +4,8 @@ from rest_framework.validators import UniqueValidator
 from .models import CustomUser
 
 from django.contrib.auth import get_user_model
-from .models import PasswordResetCode
 User = get_user_model()
+from .models import PasswordResetCode
 from django.contrib.auth.password_validation import validate_password
 from .models import PasswordResetCode
 from .celery_task import Celery_send_mail

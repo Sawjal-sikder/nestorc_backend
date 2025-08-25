@@ -14,15 +14,70 @@ class PlaceTypeSerializer(serializers.ModelSerializer):
     class Meta:
         model = PlaceType
         fields = ['id', 'name', 'description']
+        
+class ScavengerCreateHuntSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ScavengerHunt
+        fields = ['id', 'venue', 'title']
+        
+
+class UserScavengerHuntSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = UserScavengerHunt
+        fields = ["checked", "uploaded_image"]
+
+
+class ScavengerHuntSerializer(serializers.ModelSerializer):
+    check = serializers.SerializerMethodField()
+    # image = serializers.ImageField(required=False)  # if you have images
+
+    class Meta:
+        model = ScavengerHunt
+        fields = ["id", "title", "check"]
+
+    def get_check(self, obj):
+        request = self.context.get("request")
+        user = request.user if request else None
+        if user and user.is_authenticated:
+            us = UserScavengerHunt.objects.filter(user=user, scavenger_hunt=obj).first()
+            if us:
+                return UserScavengerHuntSerializer(us).data
+            return {"checked": False, "uploaded_image": None}
+        return {"checked": False, "uploaded_image": None}
+
+
 
 class VenueSerializer(serializers.ModelSerializer):
     distance_km = serializers.FloatField(read_only=True)
+    scavenger_hunts = ScavengerHuntSerializer(many=True, read_only=True)
 
     class Meta:
         model = Venue
-        fields = ["id", "city", "type_of_place", "venue_name", "image", "description", "latitude", "longitude", "distance_km"]
+        fields = ["id", "city", "type_of_place", "venue_name", "image", "description", "latitude", "longitude", "distance_km", "scavenger_hunts"]
+
+class UserScavengerHuntUpdateSerializer(serializers.ModelSerializer):
+    check = serializers.BooleanField(source="checked", required=False)
+    image = serializers.ImageField(source="uploaded_image", required=False)
+
+    class Meta:
+        model = UserScavengerHunt
+        fields = ["check", "image"]
+
+    def update(self, instance, validated_data):
+        instance.checked = validated_data.get("checked", instance.checked)
+        instance.uploaded_image = validated_data.get("uploaded_image", instance.uploaded_image)
+        instance.save()
+        return instance
 
 
+
+class PlaceWiseVenueSerializer(serializers.ModelSerializer):
+    venues = VenueSerializer(many=True)
+
+    class Meta:
+        model = PlaceType
+        fields = ["id", "name", "venues",]
+        
 
 class LatLngSerializer(serializers.ModelSerializer):
     class Meta:
