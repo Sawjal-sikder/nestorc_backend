@@ -50,6 +50,9 @@ class ScavengerHuntSerializer(serializers.ModelSerializer):
 class VenueSerializer(serializers.ModelSerializer):
     distance_km = serializers.FloatField(read_only=True)
     scavenger_hunts = ScavengerHuntSerializer(many=True, read_only=True)
+    city = serializers.SlugRelatedField(slug_field="name", read_only=True)
+    type_of_place = serializers.SlugRelatedField(slug_field="name", read_only=True)
+    
 
     class Meta:
         model = Venue

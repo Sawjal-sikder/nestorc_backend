@@ -121,6 +121,7 @@ class ScavengerHuntViews(generics.ListCreateAPIView):
 
 class UserScavengerHuntUpdateView(generics.UpdateAPIView):
     serializer_class = UserScavengerHuntUpdateSerializer
+    parser_classes = [MultiPartParser, FormParser]
 
     def get_object(self):
         scavenger_hunt_id = self.kwargs["pk"]

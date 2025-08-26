@@ -40,7 +40,10 @@ class RegisterSerializer(serializers.ModelSerializer):
 
         return user
 
-
+class UpdateDrivingLicenseSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = ["driving_license"]
 
 class VerifyActiveCodeSerializer(serializers.Serializer):
     email = serializers.EmailField()

@@ -10,7 +10,7 @@ from .serializers import *
 class RegisterView(generics.CreateAPIView):
     serializer_class = RegisterSerializer
     permission_classes = [permissions.AllowAny]
-    parser_classes = [MultiPartParser, FormParser]
+    # parser_classes = [MultiPartParser, FormParser]
 
     def create(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
@@ -21,6 +21,14 @@ class RegisterView(generics.CreateAPIView):
             "message": "Your account has been created successfully. You can now log in.",
             # "user": user_data
             }, status=status.HTTP_201_CREATED)
+        
+# patch method for update driving licence
+class UpdateDrivingLicenseView(generics.UpdateAPIView):
+    serializer_class = UpdateDrivingLicenseSerializer
+    parser_classes = [MultiPartParser, FormParser]
+
+    def get_object(self):
+        return self.request.user
 
 class VerifyCodeView(generics.CreateAPIView):
     serializer_class = VerifyActiveCodeSerializer
