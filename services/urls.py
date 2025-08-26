@@ -8,6 +8,7 @@ urlpatterns = [
     path('places/venue/', PlaceWiseVenueView.as_view(), name='place-type-detail'),
 #     for venues
     path('venues/', VenueCreateListView.as_view(), name='venue-list'),
+    path('venues/create/', VenueCreateView.as_view(), name='venue-list'),
     path('venues/<int:pk>/', VenueDetailView.as_view(), name='venue-detail'),
     path('venues/city/<int:city_id>/', VenueByCityView.as_view(), name='venue-list-by-city'),
     path("nearest-venues/", NearestVenueView.as_view(), name="nearest-venues"),

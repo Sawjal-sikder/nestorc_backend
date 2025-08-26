@@ -58,6 +58,15 @@ class VenueSerializer(serializers.ModelSerializer):
         model = Venue
         fields = ["id", "city", "type_of_place", "venue_name", "image", "description", "latitude", "longitude", "distance_km", "scavenger_hunts"]
 
+
+class CreateVenueSerializer(serializers.ModelSerializer):
+    distance_km = serializers.FloatField(read_only=True)
+    scavenger_hunts = ScavengerHuntSerializer(many=True, read_only=True)   
+
+    class Meta:
+        model = Venue
+        fields = ["id", "city", "type_of_place", "venue_name", "image", "description", "latitude", "longitude", "distance_km", "scavenger_hunts"]
+
 class UserScavengerHuntUpdateSerializer(serializers.ModelSerializer):
     check = serializers.BooleanField(source="checked", required=False)
     image = serializers.ImageField(source="uploaded_image", required=False)
