@@ -12,3 +12,13 @@ class UserScavengerHuntAdmin(admin.ModelAdmin):
 class PlaceTypeAdmin(admin.ModelAdmin):
     list_display = ["id", "name"]
     search_fields = ["name"]
+    
+# @admin.register(City)
+# class CityAdmin(admin.ModelAdmin):
+#     list_display = ["id", "name", "state", "country"]
+#     search_fields = ["name", "state__name", "country__name"]
+
+@admin.register(Venue)
+class VenueAdmin(admin.ModelAdmin):
+    list_display = ["id", "city", "type_of_place","venue_name","latitude","longitude"]
+    # search_fields = ["name", "location__name"]

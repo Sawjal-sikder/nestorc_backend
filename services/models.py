@@ -62,6 +62,8 @@ class Venue(models.Model):
     
 class GeoFenced(models.Model):
     title = models.CharField(max_length=100)
+    alertMessage = models.TextField(blank=True, null=True)
+    isRestricted = models.BooleanField(default=False)
 
     def __str__(self):
         return self.title

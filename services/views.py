@@ -163,8 +163,11 @@ class GeoFencedViews(generics.ListCreateAPIView):
         if not self.request.user.is_superuser:
             raise PermissionError("Only superusers can create geofences.")
         serializer.save()
-        
-        
+
+class GeoFencedDetailView(generics.RetrieveUpdateDestroyAPIView):
+    queryset = GeoFenced.objects.all()
+    serializer_class = GeoFencedSerializer
+
 
 class NearestVenueView(APIView):
     def get(self, request):

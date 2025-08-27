@@ -16,4 +16,5 @@ urlpatterns = [
     path("user-scavenger-hunts/<int:pk>/", UserScavengerHuntUpdateView.as_view(), name="user-scavenger-hunt-update"),
     # GeoFencedViews
     path('geofences/', GeoFencedViews.as_view(), name='geofence-list'),
+    path('geofences/<int:pk>/', GeoFencedDetailView.as_view(), name='geofence-detail'),
 ]

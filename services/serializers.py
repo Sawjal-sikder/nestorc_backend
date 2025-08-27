@@ -102,7 +102,7 @@ class GeoFencedSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = GeoFenced
-        fields = ["id", "title", "polygon_points"]
+        fields = ["id", "title", "alertMessage", "polygon_points", "isRestricted"]
 
     def validate_polygon_points(self, value):
         if len(value) < 4:
@@ -115,3 +115,21 @@ class GeoFencedSerializer(serializers.ModelSerializer):
         for point_data in polygon_points_data:
             LatLng.objects.create(geo_fenced_area=geo_fenced_area, **point_data)
         return geo_fenced_area
+
+    def update(self, instance, validated_data):
+        # Update simple fields
+        instance.title = validated_data.get("title", instance.title)
+        instance.alertMessage = validated_data.get("alertMessage", instance.alertMessage)
+        instance.isRestricted = validated_data.get("isRestricted", instance.isRestricted)
+        instance.save()
+
+        # Handle polygon_points
+        polygon_points_data = validated_data.pop("polygon_points", None)
+        if polygon_points_data is not None:
+            # Remove old points
+            instance.polygon_points.all().delete()
+            # Add new ones
+            for point_data in polygon_points_data:
+                LatLng.objects.create(geo_fenced_area=instance, **point_data)
+
+        return instance
