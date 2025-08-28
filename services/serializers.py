@@ -62,6 +62,7 @@ class VenueSerializer(serializers.ModelSerializer):
 class CreateVenueSerializer(serializers.ModelSerializer):
     city = serializers.PrimaryKeyRelatedField(queryset=City.objects.all())
     type_of_place = serializers.PrimaryKeyRelatedField(queryset=PlaceType.objects.all())
+    
     scavenger_hunts = serializers.CharField(
         required=False,
         write_only=True,
@@ -71,10 +72,18 @@ class CreateVenueSerializer(serializers.ModelSerializer):
     class Meta:
         model = Venue
         fields = [
-            "id", "city", "type_of_place", "venue_name", "image",
-            "description", "latitude", "longitude", "scavenger_hunts"
+            "id", "city", "type_of_place", 
+            "venue_name", "image", "description", "latitude", "longitude", "scavenger_hunts"
         ]
         read_only_fields = ["id"]
+
+    def to_representation(self, instance):
+        """Override to return names instead of IDs in the response"""
+        data = super().to_representation(instance)
+        # Replace IDs with names
+        data['city'] = instance.city.name if instance.city else None
+        data['type_of_place'] = instance.type_of_place.name if instance.type_of_place else None
+        return data
 
     def to_internal_value(self, data):
         # Debug: Print raw request data
