@@ -2,6 +2,7 @@ from django.core.files.storage import default_storage
 from rest_framework import serializers
 from django.utils import timezone
 from .models import *
+import json
 
 class CitySerializer(serializers.ModelSerializer):
 
@@ -60,13 +61,31 @@ class VenueSerializer(serializers.ModelSerializer):
 
 
 class CreateVenueSerializer(serializers.ModelSerializer):
-    distance_km = serializers.FloatField(read_only=True)
-    scavenger_hunts = ScavengerHuntSerializer(many=True, read_only=True)   
+    scavenger_hunts = ScavengerHuntSerializer(many=True, required=False)
 
     class Meta:
         model = Venue
-        fields = ["id", "city", "type_of_place", "venue_name", "image", "description", "latitude", "longitude", "distance_km", "scavenger_hunts"]
+        fields = [
+            "id", "city", "type_of_place", "venue_name", "image",
+            "description", "latitude", "longitude", "scavenger_hunts"
+        ]
 
+    def create(self, validated_data):
+        scavenger_hunts_data = validated_data.pop("scavenger_hunts", [])
+
+        # Handle JSON string coming from FormData
+        if isinstance(scavenger_hunts_data, str):
+            import json
+            scavenger_hunts_data = json.loads(scavenger_hunts_data)
+
+        venue = Venue.objects.create(**validated_data)
+
+        for hunt_data in scavenger_hunts_data:
+            ScavengerHunt.objects.create(venue=venue, **hunt_data)
+
+        return venue
+    
+    
 class UserScavengerHuntUpdateSerializer(serializers.ModelSerializer):
     check = serializers.BooleanField(source="checked", required=False)
     image = serializers.ImageField(source="uploaded_image", required=False)

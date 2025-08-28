@@ -87,20 +87,26 @@ class VenueCreateView(generics.ListCreateAPIView):
     permission_classes = [permissions.AllowAny]
     parser_classes = [MultiPartParser, FormParser]
 
-    def get(self, request, *args, **kwargs):
-        venues = Venue.objects.all()
-        serializer = self.get_serializer(venues, many=True)
-        return Response(serializer.data)
-
     def post(self, request, *args, **kwargs):
-        if not request.user.is_superuser:
-            return Response({"error": "Only superusers are allowed to perform this action."}, status=status.HTTP_401_UNAUTHORIZED)
-        
-        serializer = self.get_serializer(data=request.data)
-        if serializer.is_valid():
-            venue = serializer.save()
-            return Response(self.get_serializer(venue).data, status=status.HTTP_201_CREATED)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        data = request.data.copy()
+
+        # Parse scavenger_hunts if it's a JSON string
+        scavenger_hunts = data.get("scavenger_hunts")
+        if scavenger_hunts:
+            import json
+            try:
+                data["scavenger_hunts"] = json.loads(scavenger_hunts)
+            except json.JSONDecodeError:
+                return Response(
+                    {"scavenger_hunts": ["Invalid JSON"]},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+
+        serializer = self.get_serializer(data=data)
+        serializer.is_valid(raise_exception=True)
+        venue = serializer.save()
+        return Response(self.get_serializer(venue).data, status=status.HTTP_201_CREATED)
+
   
 class VenueDetailView(generics.RetrieveUpdateDestroyAPIView):
     queryset = Venue.objects.all()

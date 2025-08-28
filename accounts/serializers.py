@@ -10,7 +10,19 @@ from django.contrib.auth.password_validation import validate_password
 from .models import PasswordResetCode
 from .celery_task import Celery_send_mail
 
+from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 
+class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
+    @classmethod
+    def get_token(cls, user):
+        token = super().get_token(user)
+        return token
+
+    def validate(self, attrs):
+        data = super().validate(attrs)  
+        user = self.user
+        data['driving_license'] = bool(user.driving_license)
+        return data
 
 class RegisterSerializer(serializers.ModelSerializer):
     email = serializers.EmailField(
