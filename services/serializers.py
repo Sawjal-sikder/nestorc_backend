@@ -59,9 +59,14 @@ class VenueSerializer(serializers.ModelSerializer):
         model = Venue
         fields = ["id", "city", "type_of_place", "venue_name", "image", "description", "latitude", "longitude", "distance_km", "scavenger_hunts"]
 
-
 class CreateVenueSerializer(serializers.ModelSerializer):
-    scavenger_hunts = ScavengerHuntSerializer(many=True, required=False)
+    city = serializers.PrimaryKeyRelatedField(queryset=City.objects.all())
+    type_of_place = serializers.PrimaryKeyRelatedField(queryset=PlaceType.objects.all())
+    scavenger_hunts = serializers.CharField(
+        required=False,
+        write_only=True,
+        allow_blank=True
+    )
 
     class Meta:
         model = Venue
@@ -69,21 +74,47 @@ class CreateVenueSerializer(serializers.ModelSerializer):
             "id", "city", "type_of_place", "venue_name", "image",
             "description", "latitude", "longitude", "scavenger_hunts"
         ]
+        read_only_fields = ["id"]
+
+    def to_internal_value(self, data):
+        # Debug: Print raw request data
+        # print(f"Raw request data: {data}")
+        
+        # Create a mutable copy of the data but don't modify scavenger_hunts here
+        if hasattr(data, 'copy'):
+            data = data.copy()
+        
+        # Just print what we received for scavenger_hunts
+        if 'scavenger_hunts' in data:
+            print(f"Raw scavenger_hunts: {data['scavenger_hunts']}")
+        
+        return super().to_internal_value(data)
 
     def create(self, validated_data):
+        # print(f"Validated Data: {validated_data}")
         scavenger_hunts_data = validated_data.pop("scavenger_hunts", [])
-
-        # Handle JSON string coming from FormData
-        if isinstance(scavenger_hunts_data, str):
-            import json
-            scavenger_hunts_data = json.loads(scavenger_hunts_data)
+        # print(f"Scavenger Hunts Data: {scavenger_hunts_data}")
+        # print(f"Scavenger Hunts Type: {type(scavenger_hunts_data)}")
 
         venue = Venue.objects.create(**validated_data)
 
-        for hunt_data in scavenger_hunts_data:
-            ScavengerHunt.objects.create(venue=venue, **hunt_data)
+        # Handle scavenger hunts data - could be string, list, or dict
+        if isinstance(scavenger_hunts_data, str):
+            import json
+            try:
+                scavenger_hunts_data = json.loads(scavenger_hunts_data)
+            except json.JSONDecodeError:
+                scavenger_hunts_data = []
+        
+        if isinstance(scavenger_hunts_data, list):
+            for hunt_data in scavenger_hunts_data:
+                title = hunt_data.get('title', '') if isinstance(hunt_data, dict) else str(hunt_data)
+                if title:
+                    ScavengerHunt.objects.create(venue=venue, title=title)
 
         return venue
+
+
     
     
 class UserScavengerHuntUpdateSerializer(serializers.ModelSerializer):
