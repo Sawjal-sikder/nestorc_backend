@@ -192,3 +192,11 @@ class NearestVenueView(APIView):
         nearest = sorted(venue_list, key=lambda x: x["distance_km"])[:2]
 
         return Response(nearest, status=status.HTTP_200_OK)
+
+
+
+class CityVenuesAPIView(APIView):
+    def get(self, request):
+        cities = City.objects.all()
+        serializer = CityByVenueSerializer(cities, many=True)
+        return Response(serializer.data)

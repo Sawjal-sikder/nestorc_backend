@@ -9,6 +9,8 @@ class CitySerializer(serializers.ModelSerializer):
     class Meta:
         model = City
         fields = ['id', 'name', 'description']
+        
+        
 
 class PlaceTypeSerializer(serializers.ModelSerializer):
 
@@ -192,3 +194,22 @@ class GeoFencedSerializer(serializers.ModelSerializer):
                 LatLng.objects.create(geo_fenced_area=instance, **point_data)
 
         return instance
+
+
+
+class VenueForCitySerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Venue
+        fields = ['id', 'venue_name', 'image',] 
+
+
+class CityByVenueSerializer(serializers.ModelSerializer):
+    venues = serializers.SerializerMethodField()  
+
+    class Meta:
+        model = City
+        fields = ['id', 'name',  'venues']
+
+    def get_venues(self, obj):
+        venues = obj.venues.all()[:2]  
+        return VenueForCitySerializer(venues, many=True).data
