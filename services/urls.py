@@ -13,6 +13,7 @@ urlpatterns = [
     path('venues/city/<int:city_id>/', VenueByCityView.as_view(), name='venue-list-by-city'),
     path("cities/venues/", CityVenuesAPIView.as_view(), name="city-venues"),
     path("nearest-venues/", NearestVenueView.as_view(), name="nearest-venues"),
+    path("nearest-venues/more/limit/", NearestVenueTenView.as_view(), name="nearest-venues-10"),
     path("scavenger-hunts/", ScavengerHuntViews.as_view(), name="scavenger-hunt-list"),
     path("user-scavenger-hunts/<int:pk>/", UserScavengerHuntUpdateView.as_view(), name="user-scavenger-hunt-update"),
     # GeoFencedViews
