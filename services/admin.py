@@ -22,3 +22,8 @@ class PlaceTypeAdmin(admin.ModelAdmin):
 class VenueAdmin(admin.ModelAdmin):
     list_display = ["id", "city", "type_of_place","venue_name","latitude","longitude"]
     # search_fields = ["name", "location__name"]
+
+@admin.register(List_Message)
+class ListMessageAdmin(admin.ModelAdmin):
+    list_display = ["id", "venue", "message", "create_at", "update_at"]
+    search_fields = ["venue__name", "message"]

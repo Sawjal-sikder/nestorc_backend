@@ -49,80 +49,158 @@ class ScavengerHuntSerializer(serializers.ModelSerializer):
         return {"checked": False, "uploaded_image": None}
 
 
+class CreateVenueMessageSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = List_Message
+        fields = "__all__"
+
+class ListMessageSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = List_Message
+        fields = ["id", "message",]
+        
+class VenueMessageSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = List_Message
+        fields = ["id", "message",]
+
 
 class VenueSerializer(serializers.ModelSerializer):
     distance_km = serializers.FloatField(read_only=True)
     scavenger_hunts = ScavengerHuntSerializer(many=True, read_only=True)
     city = serializers.SlugRelatedField(slug_field="name", read_only=True)
     type_of_place = serializers.SlugRelatedField(slug_field="name", read_only=True)
-    
+    venue_message = ListMessageSerializer(many=True, read_only=True, source="messages")
 
     class Meta:
         model = Venue
-        fields = ["id", "city", "type_of_place", "venue_name", "image", "description", "latitude", "longitude", "distance_km", "scavenger_hunts"]
+        fields = ["id", "city", "type_of_place", "venue_name","venue_message", "image", "description", "latitude", "longitude", "distance_km", "scavenger_hunts"]
 
 class CreateVenueSerializer(serializers.ModelSerializer):
     city = serializers.PrimaryKeyRelatedField(queryset=City.objects.all())
     type_of_place = serializers.PrimaryKeyRelatedField(queryset=PlaceType.objects.all())
-    
-    scavenger_hunts = serializers.CharField(
+    scavenger_hunts = serializers.ListField(
+        child=serializers.DictField(),
         required=False,
-        write_only=True,
-        allow_blank=True
+        write_only=True
+    )
+    venue_message = serializers.ListField(
+        child=serializers.DictField(),
+        required=False,
+        write_only=True
     )
 
     class Meta:
         model = Venue
         fields = [
             "id", "city", "type_of_place", 
-            "venue_name", "image", "description", "latitude", "longitude", "scavenger_hunts"
+            "venue_name", "image", "description", "latitude", "longitude","scavenger_hunts", "venue_message"
         ]
         read_only_fields = ["id"]
 
+    def to_internal_value(self, data):
+        """Handle FormData with nested arrays"""
+        # Convert QueryDict/FormData to regular dict for easier processing
+        if hasattr(data, 'dict'):
+            # For QueryDict (FormData), use dict() to get all values
+            data_dict = {}
+            for key in data.keys():
+                # Get all values for this key (in case of multiple values)
+                values = data.getlist(key)
+                if len(values) == 1:
+                    data_dict[key] = values[0]
+                else:
+                    data_dict[key] = values
+            data = data_dict
+        elif hasattr(data, 'copy'):
+            data = data.copy()
+        
+        # Parse scavenger_hunts from FormData format
+        scavenger_hunts = []
+        venue_messages = []
+        
+        # Extract all keys and group by pattern
+        keys_to_remove = []
+        for key, value in data.items():
+            # Handle scavenger_hunts[index][field] pattern
+            if key.startswith('scavenger_hunts[') and key.endswith('][title]'):
+                try:
+                    # Extract index from scavenger_hunts[0][title]
+                    index = int(key.split('[')[1].split(']')[0])
+                    
+                    # Ensure we have enough items in the list
+                    while len(scavenger_hunts) <= index:
+                        scavenger_hunts.append({})
+                    
+                    scavenger_hunts[index]['title'] = value
+                    keys_to_remove.append(key)
+                except (ValueError, IndexError):
+                    pass  # Skip invalid keys
+            
+            # Handle venue_message[index][field] pattern
+            elif key.startswith('venue_message[') and key.endswith('][message]'):
+                try:
+                    # Extract index from venue_message[0][message]
+                    index = int(key.split('[')[1].split(']')[0])
+                    
+                    # Ensure we have enough items in the list
+                    while len(venue_messages) <= index:
+                        venue_messages.append({})
+                    
+                    venue_messages[index]['message'] = value
+                    keys_to_remove.append(key)
+                except (ValueError, IndexError):
+                    pass  # Skip invalid keys
+        
+        # Remove processed keys from data
+        for key in keys_to_remove:
+            if key in data:
+                del data[key]
+        
+        # Add parsed arrays back to data
+        if scavenger_hunts:
+            data['scavenger_hunts'] = scavenger_hunts
+        if venue_messages:
+            data['venue_message'] = venue_messages
+        
+        return super().to_internal_value(data)
     def to_representation(self, instance):
         """Override to return names instead of IDs in the response"""
         data = super().to_representation(instance)
         # Replace IDs with names
         data['city'] = instance.city.name if instance.city else None
         data['type_of_place'] = instance.type_of_place.name if instance.type_of_place else None
+        
+        # Include related data in response
+        data['scavenger_hunts'] = ScavengerHuntSerializer(instance.scavenger_hunts.all(), many=True).data
+        data['venue_message'] = ListMessageSerializer(instance.messages.all(), many=True).data
+        
         return data
 
-    def to_internal_value(self, data):
-        # Debug: Print raw request data
-        # print(f"Raw request data: {data}")
-        
-        # Create a mutable copy of the data but don't modify scavenger_hunts here
-        if hasattr(data, 'copy'):
-            data = data.copy()
-        
-        # Just print what we received for scavenger_hunts
-        if 'scavenger_hunts' in data:
-            print(f"Raw scavenger_hunts: {data['scavenger_hunts']}")
-        
-        return super().to_internal_value(data)
-
     def create(self, validated_data):
-        # print(f"Validated Data: {validated_data}")
-        scavenger_hunts_data = validated_data.pop("scavenger_hunts", [])
-        # print(f"Scavenger Hunts Data: {scavenger_hunts_data}")
-        # print(f"Scavenger Hunts Type: {type(scavenger_hunts_data)}")
-
-        venue = Venue.objects.create(**validated_data)
-
-        # Handle scavenger hunts data - could be string, list, or dict
-        if isinstance(scavenger_hunts_data, str):
-            import json
-            try:
-                scavenger_hunts_data = json.loads(scavenger_hunts_data)
-            except json.JSONDecodeError:
-                scavenger_hunts_data = []
+        # Extract nested data
+        scavenger_hunts_data = validated_data.pop('scavenger_hunts', [])
+        venue_messages_data = validated_data.pop('venue_message', [])
         
-        if isinstance(scavenger_hunts_data, list):
-            for hunt_data in scavenger_hunts_data:
-                title = hunt_data.get('title', '') if isinstance(hunt_data, dict) else str(hunt_data)
-                if title:
-                    ScavengerHunt.objects.create(venue=venue, title=title)
-
+        # Create the venue
+        venue = Venue.objects.create(**validated_data)
+        
+        # Create scavenger hunts
+        for hunt_data in scavenger_hunts_data:
+            if 'title' in hunt_data:
+                ScavengerHunt.objects.create(
+                    venue=venue,
+                    title=hunt_data['title']
+                )
+        
+        # Create venue messages
+        for message_data in venue_messages_data:
+            if 'message' in message_data:
+                List_Message.objects.create(
+                    venue=venue,
+                    message=message_data['message']
+                )
+        
         return venue
 
 

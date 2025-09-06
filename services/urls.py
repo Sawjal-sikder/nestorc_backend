@@ -19,4 +19,7 @@ urlpatterns = [
     # GeoFencedViews
     path('geofences/', GeoFencedViews.as_view(), name='geofence-list'),
     path('geofences/<int:pk>/', GeoFencedDetailView.as_view(), name='geofence-detail'),
+    # for venue messages
+    path('venues/message/create/', CreateVenueMessageView.as_view(), name='create-venue-message'),
+    path('venues/message/<int:venue_id>/', VenueMessageDetailView.as_view(), name='message-list'),
 ]

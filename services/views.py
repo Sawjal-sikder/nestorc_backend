@@ -1,3 +1,4 @@
+from traitlets import Any
 from rest_framework.parsers import MultiPartParser, FormParser
 from rest_framework import generics, status, permissions
 from rest_framework.response import Response
@@ -60,7 +61,18 @@ class PlaceTypeView(generics.ListCreateAPIView):
     queryset = PlaceType.objects.all()
     serializer_class = PlaceTypeSerializer
     permission_classes = [permissions.IsAdminUser]
+    
+    
+class CreateVenueMessageView(generics.ListCreateAPIView):
+    serializer_class = CreateVenueMessageSerializer
+    queryset = List_Message.objects.all()
 
+class VenueMessageDetailView(generics.ListAPIView):
+    serializer_class = VenueMessageSerializer
+    
+    def get_queryset(self):
+        venue_id = self.kwargs.get("venue_id")
+        return List_Message.objects.filter(venue_id=venue_id)
 
 class VenueCreateListView(generics.ListCreateAPIView):
     serializer_class = VenueSerializer
@@ -81,6 +93,10 @@ class VenueCreateListView(generics.ListCreateAPIView):
             venue = serializer.save()
             return Response(self.get_serializer(venue).data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    
+
+
+
     
 class VenueCreateView(generics.ListCreateAPIView):
     serializer_class = CreateVenueSerializer

@@ -44,6 +44,7 @@ class UserScavengerHunt(models.Model):
     
     def __str__(self):
         return f"{self.user.email} - {self.scavenger_hunt.title}"
+    
 
 class Venue(models.Model):
     city = models.ForeignKey(City, related_name='venues', on_delete=models.CASCADE)
@@ -59,6 +60,15 @@ class Venue(models.Model):
     def __str__(self):
         return self.venue_name
     
+    
+class List_Message(models.Model):
+    venue = models.ForeignKey(Venue, related_name='messages', on_delete=models.CASCADE)
+    message = models.TextField()
+    create_at = models.DateTimeField(auto_now_add=True)
+    update_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return f"Message for {self.venue.venue_name}"
     
 class GeoFenced(models.Model):
     title = models.CharField(max_length=100)
