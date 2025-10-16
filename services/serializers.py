@@ -36,7 +36,7 @@ class ScavengerHuntSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = ScavengerHunt
-        fields = ["id", "title", "check"]
+        fields = ["id", "title", "image", "check"]
 
     def get_check(self, obj):
         request = self.context.get("request")
@@ -123,16 +123,18 @@ class CreateVenueSerializer(serializers.ModelSerializer):
         keys_to_remove = []
         for key, value in data.items():
             # Handle scavenger_hunts[index][field] pattern
-            if key.startswith('scavenger_hunts[') and key.endswith('][title]'):
+            if key.startswith('scavenger_hunts[') and (key.endswith('][title]') or key.endswith('][image]')):
                 try:
-                    # Extract index from scavenger_hunts[0][title]
-                    index = int(key.split('[')[1].split(']')[0])
+                    # Extract index and field from scavenger_hunts[0][title] or scavenger_hunts[0][image]
+                    parts = key.split('[')
+                    index = int(parts[1].split(']')[0])
+                    field = parts[2].split(']')[0]  # 'title' or 'image'
                     
                     # Ensure we have enough items in the list
                     while len(scavenger_hunts) <= index:
                         scavenger_hunts.append({})
                     
-                    scavenger_hunts[index]['title'] = value
+                    scavenger_hunts[index][field] = value
                     keys_to_remove.append(key)
                 except (ValueError, IndexError):
                     pass  # Skip invalid keys
@@ -190,7 +192,8 @@ class CreateVenueSerializer(serializers.ModelSerializer):
             if 'title' in hunt_data:
                 ScavengerHunt.objects.create(
                     venue=venue,
-                    title=hunt_data['title']
+                    title=hunt_data['title'],
+                    image=hunt_data.get('image', None)
                 )
         
         # Create venue messages
@@ -202,6 +205,148 @@ class CreateVenueSerializer(serializers.ModelSerializer):
                 )
         
         return venue
+
+
+class UpdateVenueSerializer(serializers.ModelSerializer):
+    city = serializers.PrimaryKeyRelatedField(queryset=City.objects.all())
+    type_of_place = serializers.PrimaryKeyRelatedField(queryset=PlaceType.objects.all())
+    scavenger_hunts = serializers.ListField(
+        child=serializers.DictField(),
+        required=False,
+        write_only=True
+    )
+    venue_message = serializers.ListField(
+        child=serializers.DictField(),
+        required=False,
+        write_only=True
+    )
+
+    class Meta:
+        model = Venue
+        fields = [
+            "id", "city", "type_of_place", 
+            "venue_name", "image", "description", "latitude", "longitude","scavenger_hunts", "venue_message"
+        ]
+        read_only_fields = ["id"]
+
+    def to_internal_value(self, data):
+        """Handle FormData with nested arrays"""
+        # Convert QueryDict/FormData to regular dict for easier processing
+        if hasattr(data, 'dict'):
+            # For QueryDict (FormData), use dict() to get all values
+            data_dict = {}
+            for key in data.keys():
+                # Get all values for this key (in case of multiple values)
+                values = data.getlist(key)
+                if len(values) == 1:
+                    data_dict[key] = values[0]
+                else:
+                    data_dict[key] = values
+            data = data_dict
+        elif hasattr(data, 'copy'):
+            data = data.copy()
+        
+        # Parse scavenger_hunts from FormData format
+        scavenger_hunts = []
+        venue_messages = []
+        
+        # Extract all keys and group by pattern
+        keys_to_remove = []
+        for key, value in data.items():
+            # Handle scavenger_hunts[index][field] pattern
+            if key.startswith('scavenger_hunts[') and (key.endswith('][title]') or key.endswith('][image]')):
+                try:
+                    # Extract index and field from scavenger_hunts[0][title] or scavenger_hunts[0][image]
+                    parts = key.split('[')
+                    index = int(parts[1].split(']')[0])
+                    field = parts[2].split(']')[0]  # 'title' or 'image'
+                    
+                    # Ensure we have enough items in the list
+                    while len(scavenger_hunts) <= index:
+                        scavenger_hunts.append({})
+                    
+                    scavenger_hunts[index][field] = value
+                    keys_to_remove.append(key)
+                except (ValueError, IndexError):
+                    pass  # Skip invalid keys
+            
+            # Handle venue_message[index][field] pattern
+            elif key.startswith('venue_message[') and key.endswith('][message]'):
+                try:
+                    # Extract index from venue_message[0][message]
+                    index = int(key.split('[')[1].split(']')[0])
+                    
+                    # Ensure we have enough items in the list
+                    while len(venue_messages) <= index:
+                        venue_messages.append({})
+                    
+                    venue_messages[index]['message'] = value
+                    keys_to_remove.append(key)
+                except (ValueError, IndexError):
+                    pass  # Skip invalid keys
+        
+        # Remove processed keys from data
+        for key in keys_to_remove:
+            if key in data:
+                del data[key]
+        
+        # Add parsed arrays back to data
+        if scavenger_hunts:
+            data['scavenger_hunts'] = scavenger_hunts
+        if venue_messages:
+            data['venue_message'] = venue_messages
+        
+        return super().to_internal_value(data)
+    
+    def to_representation(self, instance):
+        """Override to return names instead of IDs in the response"""
+        data = super().to_representation(instance)
+        # Replace IDs with names
+        data['city'] = instance.city.name if instance.city else None
+        data['type_of_place'] = instance.type_of_place.name if instance.type_of_place else None
+        
+        # Include related data in response
+        data['scavenger_hunts'] = ScavengerHuntSerializer(instance.scavenger_hunts.all(), many=True).data
+        data['venue_message'] = ListMessageSerializer(instance.messages.all(), many=True).data
+        
+        return data
+
+    def update(self, instance, validated_data):
+        # Extract nested data
+        scavenger_hunts_data = validated_data.pop('scavenger_hunts', [])
+        venue_messages_data = validated_data.pop('venue_message', [])
+        
+        # Update the venue basic fields
+        for attr, value in validated_data.items():
+            setattr(instance, attr, value)
+        instance.save()
+        
+        # Handle scavenger hunts - replace all existing ones
+        if scavenger_hunts_data:
+            # Remove existing scavenger hunts
+            instance.scavenger_hunts.all().delete()
+            # Create new scavenger hunts
+            for hunt_data in scavenger_hunts_data:
+                if 'title' in hunt_data:
+                    ScavengerHunt.objects.create(
+                        venue=instance,
+                        title=hunt_data['title'],
+                        image=hunt_data.get('image', None)
+                    )
+        
+        # Handle venue messages - replace all existing ones
+        if venue_messages_data:
+            # Remove existing venue messages
+            instance.messages.all().delete()
+            # Create new venue messages
+            for message_data in venue_messages_data:
+                if 'message' in message_data:
+                    List_Message.objects.create(
+                        venue=instance,
+                        message=message_data['message']
+                    )
+        
+        return instance
 
 
     

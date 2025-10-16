@@ -10,6 +10,7 @@ urlpatterns = [
     path('venues/', VenueCreateListView.as_view(), name='venue-list'),
     path('venues/create/', VenueCreateView.as_view(), name='venue-list'),
     path('venues/<int:pk>/', VenueDetailView.as_view(), name='venue-detail'),
+    path('venues/update/<int:pk>/', VenueUpdateView.as_view(), name='venue-update'),
     path('venues/city/<int:city_id>/', VenueByCityView.as_view(), name='venue-list-by-city'),
     path("cities/venues/", CityVenuesAPIView.as_view(), name="city-venues"),
     path("nearest-venues/", NearestVenueView.as_view(), name="nearest-venues"),

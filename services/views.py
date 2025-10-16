@@ -114,6 +114,29 @@ class VenueCreateView(generics.ListCreateAPIView):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
+class VenueUpdateView(generics.RetrieveUpdateAPIView):
+    queryset = Venue.objects.all()
+    serializer_class = UpdateVenueSerializer
+    permission_classes = [permissions.AllowAny]
+    parser_classes = [MultiPartParser, FormParser]
+
+    def put(self, request, *args, **kwargs):
+        venue = self.get_object()
+        serializer = self.get_serializer(venue, data=request.data, partial=True)
+        if serializer.is_valid():
+            venue = serializer.save()
+            return Response(self.get_serializer(venue).data, status=status.HTTP_200_OK)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    def patch(self, request, *args, **kwargs):
+        venue = self.get_object()
+        serializer = self.get_serializer(venue, data=request.data, partial=True)
+        if serializer.is_valid():
+            venue = serializer.save()
+            return Response(self.get_serializer(venue).data, status=status.HTTP_200_OK)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
 class VenueDetailView(generics.RetrieveUpdateDestroyAPIView):
     queryset = Venue.objects.all()
     serializer_class = VenueSerializer
