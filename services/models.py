@@ -45,6 +45,18 @@ class UserScavengerHunt(models.Model):
     def __str__(self):
         return f"{self.user.email} - {self.scavenger_hunt.title}"
     
+class Stops(models.Model):
+    Venue = models.ForeignKey('Venue', related_name='stops', on_delete=models.CASCADE)
+    name = models.CharField(max_length=200)
+    description = models.TextField(blank=True)
+    latitude = models.FloatField()
+    longitude = models.FloatField()
+    create_at = models.DateTimeField(auto_now_add=True)
+    update_at = models.DateTimeField(auto_now=True)
+    
+    def __str__(self):
+        return self.name
+    
 
 class Venue(models.Model):
     city = models.ForeignKey(City, related_name='venues', on_delete=models.CASCADE)

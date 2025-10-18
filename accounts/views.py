@@ -178,3 +178,30 @@ def download_all_user_view(request):
 
 def download_all_user_excel_view(request):
     return download_all_user_excel(request)
+
+class UserPermissionPremiumView(generics.UpdateAPIView):
+    queryset = User.objects.all()
+    permission_classes = [permissions.IsAdminUser]
+    lookup_field = 'id'
+
+    def post(self, request, *args, **kwargs):
+        user = self.get_object()
+        is_premium = request.data.get('is_premium')
+
+        if is_premium is None:
+            return Response(
+                {"detail": "is_premium field is required."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        # Convert to boolean (handle string input)
+        if isinstance(is_premium, str):
+            is_premium = is_premium.lower() in ["true", "1", "yes"]
+
+        user.is_premium = bool(is_premium)
+        user.save()
+
+        return Response(
+            {"detail": f"User premium status updated to {user.is_premium}."},
+            status=status.HTTP_200_OK
+        )

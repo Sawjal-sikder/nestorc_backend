@@ -63,6 +63,12 @@ class VenueMessageSerializer(serializers.ModelSerializer):
     class Meta:
         model = List_Message
         fields = ["id", "message",]
+        
+class StopSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Stops
+        fields = ["id", "name", "description", "latitude", "longitude"]
+        read_only_fields = ["id"]
 
 
 class VenueSerializer(serializers.ModelSerializer):
@@ -71,10 +77,47 @@ class VenueSerializer(serializers.ModelSerializer):
     city = serializers.SlugRelatedField(slug_field="name", read_only=True)
     type_of_place = serializers.SlugRelatedField(slug_field="name", read_only=True)
     venue_message = ListMessageSerializer(many=True, read_only=True, source="messages")
+    stops = StopSerializer(many=True, read_only=True)
 
     class Meta:
         model = Venue
-        fields = ["id", "city", "type_of_place", "venue_name","venue_message", "image", "description", "latitude", "longitude", "distance_km", "scavenger_hunts"]
+        fields = [
+            "id",
+            "city",
+            "type_of_place",
+            "venue_name",
+            "venue_message",
+            "image",
+            "description",
+            "latitude",
+            "longitude",
+            "distance_km",
+            "scavenger_hunts",
+            "stops",
+        ]
+
+    def to_representation(self, instance):
+        """
+        Conditionally include scavenger_hunts or stops depending on user's premium status.
+        """
+        representation = super().to_representation(instance)
+        request = self.context.get('request')
+
+        # Default: non-premium users only get stops
+        if request and hasattr(request, 'user'):
+            user = request.user
+            if user.is_authenticated and user.is_premium:
+                # Premium user → remove stops
+                representation.pop('stops', None)
+            else:
+                # Non-premium user → remove scavenger_hunts
+                representation.pop('scavenger_hunts', None)
+        else:
+            # If request missing or user anonymous → show only stops
+            representation.pop('scavenger_hunts', None)
+
+        return representation
+
 
 class CreateVenueSerializer(serializers.ModelSerializer):
     city = serializers.PrimaryKeyRelatedField(queryset=City.objects.all())

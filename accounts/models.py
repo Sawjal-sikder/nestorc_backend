@@ -40,6 +40,7 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
     phone_number = models.CharField(max_length=20, unique=True)
     profile_image = models.ImageField(upload_to='profile_images/', null=True, blank=True)
     driving_license = models.ImageField(upload_to='driving_licenses/', null=True, blank=True)
+    is_premium = models.BooleanField(default=False)
     is_active = models.BooleanField(default=False)
     is_staff = models.BooleanField(default=False)
 

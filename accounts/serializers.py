@@ -248,7 +248,7 @@ class LogoutSerializer(serializers.Serializer):
 class userListSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = ['id', 'full_name', 'email', 'phone_number', 'is_active']
+        fields = ['id', 'full_name', 'email', 'phone_number', 'is_active', 'is_premium']
 
 class UserUpdateSerializer(serializers.ModelSerializer):
     profile_image = serializers.ImageField(use_url=True, required=False)

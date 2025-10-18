@@ -22,4 +22,5 @@ urlpatterns = [
     path('auth/users/activate/<int:id>/', UserActivateView.as_view(), name='user_activate'),
     path('auth/users/download/pdf/', download_all_user_view, name='download_all_users_pdf'),
     path('auth/users/download/excel/', download_all_user_excel_view, name='download_all_users_excel'),
+    path('auth/users/premium/<int:id>/', UserPermissionPremiumView.as_view(), name='user_premium_status'),
 ]
