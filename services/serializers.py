@@ -174,12 +174,17 @@ class CreateVenueSerializer(serializers.ModelSerializer):
         required=False,
         write_only=True
     )
+    stops = serializers.ListField(
+        child=serializers.DictField(),
+        required=False,
+        write_only=True
+    )
 
     class Meta:
         model = Venue
         fields = [
             "id", "city", "type_of_place", 
-            "venue_name", "image", "description", "latitude", "longitude","scavenger_hunts", "venue_message"
+            "venue_name", "image", "description", "latitude", "longitude","scavenger_hunts", "venue_message", "stops"
         ]
         read_only_fields = ["id"]
 
@@ -203,6 +208,7 @@ class CreateVenueSerializer(serializers.ModelSerializer):
         # Parse scavenger_hunts from FormData format
         scavenger_hunts = []
         venue_messages = []
+        stops = []
         
         # Extract all keys and group by pattern
         keys_to_remove = []
@@ -238,6 +244,23 @@ class CreateVenueSerializer(serializers.ModelSerializer):
                     keys_to_remove.append(key)
                 except (ValueError, IndexError):
                     pass  # Skip invalid keys
+            
+            # Handle stops[index][field] pattern
+            elif key.startswith('stops[') and (key.endswith('][name]') or key.endswith('][description]') or key.endswith('][latitude]') or key.endswith('][longitude]')):
+                try:
+                    # Extract index and field from stops[0][name], stops[0][description], etc.
+                    parts = key.split('[')
+                    index = int(parts[1].split(']')[0])
+                    field = parts[2].split(']')[0]  # 'name', 'description', 'latitude', 'longitude'
+                    
+                    # Ensure we have enough items in the list
+                    while len(stops) <= index:
+                        stops.append({})
+                    
+                    stops[index][field] = value
+                    keys_to_remove.append(key)
+                except (ValueError, IndexError):
+                    pass  # Skip invalid keys
         
         # Remove processed keys from data
         for key in keys_to_remove:
@@ -249,6 +272,8 @@ class CreateVenueSerializer(serializers.ModelSerializer):
             data['scavenger_hunts'] = scavenger_hunts
         if venue_messages:
             data['venue_message'] = venue_messages
+        if stops:
+            data['stops'] = stops
         
         return super().to_internal_value(data)
     def to_representation(self, instance):
@@ -261,6 +286,7 @@ class CreateVenueSerializer(serializers.ModelSerializer):
         # Include related data in response
         data['scavenger_hunts'] = ScavengerHuntSerializer(instance.scavenger_hunts.all(), many=True).data
         data['venue_message'] = ListMessageSerializer(instance.messages.all(), many=True).data
+        data['stops'] = StopSerializer(instance.stops.all(), many=True).data
         
         return data
 
@@ -268,6 +294,7 @@ class CreateVenueSerializer(serializers.ModelSerializer):
         # Extract nested data
         scavenger_hunts_data = validated_data.pop('scavenger_hunts', [])
         venue_messages_data = validated_data.pop('venue_message', [])
+        stops_data = validated_data.pop('stops', [])
         
         # Create the venue
         venue = Venue.objects.create(**validated_data)
@@ -289,6 +316,17 @@ class CreateVenueSerializer(serializers.ModelSerializer):
                     message=message_data['message']
                 )
         
+        # Create stops
+        for stop_data in stops_data:
+            if all(field in stop_data for field in ['name', 'latitude', 'longitude']):
+                Stops.objects.create(
+                    Venue=venue,
+                    name=stop_data['name'],
+                    description=stop_data.get('description', ''),
+                    latitude=stop_data['latitude'],
+                    longitude=stop_data['longitude']
+                )
+        
         return venue
 
 
@@ -305,12 +343,17 @@ class UpdateVenueSerializer(serializers.ModelSerializer):
         required=False,
         write_only=True
     )
+    stops = serializers.ListField(
+        child=serializers.DictField(),
+        required=False,
+        write_only=True
+    )
 
     class Meta:
         model = Venue
         fields = [
             "id", "city", "type_of_place", 
-            "venue_name", "image", "description", "latitude", "longitude","scavenger_hunts", "venue_message"
+            "venue_name", "image", "description", "latitude", "longitude","scavenger_hunts", "venue_message", "stops"
         ]
         read_only_fields = ["id"]
 
@@ -334,6 +377,7 @@ class UpdateVenueSerializer(serializers.ModelSerializer):
         # Parse scavenger_hunts from FormData format
         scavenger_hunts = []
         venue_messages = []
+        stops = []
         
         # Extract all keys and group by pattern
         keys_to_remove = []
@@ -369,6 +413,23 @@ class UpdateVenueSerializer(serializers.ModelSerializer):
                     keys_to_remove.append(key)
                 except (ValueError, IndexError):
                     pass  # Skip invalid keys
+            
+            # Handle stops[index][field] pattern
+            elif key.startswith('stops[') and (key.endswith('][name]') or key.endswith('][description]') or key.endswith('][latitude]') or key.endswith('][longitude]')):
+                try:
+                    # Extract index and field from stops[0][name], stops[0][description], etc.
+                    parts = key.split('[')
+                    index = int(parts[1].split(']')[0])
+                    field = parts[2].split(']')[0]  # 'name', 'description', 'latitude', 'longitude'
+                    
+                    # Ensure we have enough items in the list
+                    while len(stops) <= index:
+                        stops.append({})
+                    
+                    stops[index][field] = value
+                    keys_to_remove.append(key)
+                except (ValueError, IndexError):
+                    pass  # Skip invalid keys
         
         # Remove processed keys from data
         for key in keys_to_remove:
@@ -380,6 +441,8 @@ class UpdateVenueSerializer(serializers.ModelSerializer):
             data['scavenger_hunts'] = scavenger_hunts
         if venue_messages:
             data['venue_message'] = venue_messages
+        if stops:
+            data['stops'] = stops
         
         return super().to_internal_value(data)
     
@@ -393,6 +456,7 @@ class UpdateVenueSerializer(serializers.ModelSerializer):
         # Include related data in response
         data['scavenger_hunts'] = ScavengerHuntSerializer(instance.scavenger_hunts.all(), many=True).data
         data['venue_message'] = ListMessageSerializer(instance.messages.all(), many=True).data
+        data['stops'] = StopSerializer(instance.stops.all(), many=True).data
         
         return data
 
@@ -400,6 +464,7 @@ class UpdateVenueSerializer(serializers.ModelSerializer):
         # Extract nested data
         scavenger_hunts_data = validated_data.pop('scavenger_hunts', [])
         venue_messages_data = validated_data.pop('venue_message', [])
+        stops_data = validated_data.pop('stops', [])
         
         # Update the venue basic fields
         for attr, value in validated_data.items():
@@ -429,6 +494,21 @@ class UpdateVenueSerializer(serializers.ModelSerializer):
                     List_Message.objects.create(
                         venue=instance,
                         message=message_data['message']
+                    )
+        
+        # Handle stops - replace all existing ones
+        if stops_data:
+            # Remove existing stops
+            instance.stops.all().delete()
+            # Create new stops
+            for stop_data in stops_data:
+                if all(field in stop_data for field in ['name', 'latitude', 'longitude']):
+                    Stops.objects.create(
+                        Venue=instance,
+                        name=stop_data['name'],
+                        description=stop_data.get('description', ''),
+                        latitude=stop_data['latitude'],
+                        longitude=stop_data['longitude']
                     )
         
         return instance
