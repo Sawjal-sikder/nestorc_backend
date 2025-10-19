@@ -69,7 +69,48 @@ class StopSerializer(serializers.ModelSerializer):
         model = Stops
         fields = ["id", "name", "description", "latitude", "longitude"]
         read_only_fields = ["id"]
+        
+class CreateStopSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Stops
+        fields = ["id", "Venue", "name", "description", "latitude", "longitude"]
+        read_only_fields = ["id"]
+        
+class ListStopSerializer(serializers.ModelSerializer):
+    stops = StopSerializer(many=True, read_only=True)
+    class Meta:
+        model = Venue
+        fields = [
+            "id",
+            "venue_name",
+            "stops",            
+        ]
 
+
+class VenueAdminSerializer(serializers.ModelSerializer):
+    distance_km = serializers.FloatField(read_only=True)
+    scavenger_hunts = ScavengerHuntSerializer(many=True, read_only=True)
+    city = serializers.SlugRelatedField(slug_field="name", read_only=True)
+    type_of_place = serializers.SlugRelatedField(slug_field="name", read_only=True)
+    venue_message = ListMessageSerializer(many=True, read_only=True, source="messages")
+    stops = StopSerializer(many=True, read_only=True)
+
+    class Meta:
+        model = Venue
+        fields = [
+            "id",
+            "city",
+            "type_of_place",
+            "venue_name",
+            "image",
+            "description",
+            "latitude",
+            "longitude",
+            "distance_km",
+            "scavenger_hunts",
+            "stops",
+            "venue_message",
+        ]
 
 class VenueSerializer(serializers.ModelSerializer):
     distance_km = serializers.FloatField(read_only=True)
@@ -86,7 +127,6 @@ class VenueSerializer(serializers.ModelSerializer):
             "city",
             "type_of_place",
             "venue_name",
-            "venue_message",
             "image",
             "description",
             "latitude",
@@ -94,6 +134,7 @@ class VenueSerializer(serializers.ModelSerializer):
             "distance_km",
             "scavenger_hunts",
             "stops",
+            "venue_message",
         ]
 
     def to_representation(self, instance):
@@ -101,6 +142,7 @@ class VenueSerializer(serializers.ModelSerializer):
         Conditionally include scavenger_hunts or stops depending on user's premium status.
         """
         representation = super().to_representation(instance)
+        representation['is_premium'] = User.objects.get(id=self.context['request'].user.id).is_premium if self.context.get('request') and self.context['request'].user.is_authenticated else False
         request = self.context.get('request')
 
         # Default: non-premium users only get stops

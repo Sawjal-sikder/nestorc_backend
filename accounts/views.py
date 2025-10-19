@@ -1,4 +1,5 @@
-from rest_framework import generics, status, permissions
+from warnings import filters
+from rest_framework import generics, status, permissions, filters
 from rest_framework.response import Response
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework_simplejwt.exceptions import TokenError
@@ -149,7 +150,9 @@ class UserListView(generics.ListAPIView):
     serializer_class = userListSerializer
     queryset = User.objects.all()
     permission_classes = [permissions.IsAdminUser]
-
+    filter_backends = [filters.SearchFilter]
+    search_fields = ['full_name', 'email', 'phone_number']
+    
 
 class UserDetailsUpdateView(generics.RetrieveUpdateAPIView):
     serializer_class = userListSerializer

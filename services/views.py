@@ -93,6 +93,26 @@ class VenueCreateListView(generics.ListCreateAPIView):
             venue = serializer.save()
             return Response(self.get_serializer(venue).data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+class VenueAdminCreateListView(generics.ListCreateAPIView):
+    serializer_class = VenueAdminSerializer
+    permission_classes = [permissions.AllowAny]
+    parser_classes = [MultiPartParser, FormParser]
+
+    def get(self, request, *args, **kwargs):
+        venues = Venue.objects.all()
+        serializer = self.get_serializer(venues, many=True)
+        return Response(serializer.data)
+
+    def post(self, request, *args, **kwargs):
+        if not request.user.is_superuser:
+            return Response({"error": "Only superusers are allowed to perform this action."}, status=status.HTTP_401_UNAUTHORIZED)
+        
+        serializer = self.get_serializer(data=request.data)
+        if serializer.is_valid():
+            venue = serializer.save()
+            return Response(self.get_serializer(venue).data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     
 
 
@@ -268,3 +288,24 @@ class CityVenuesAPIView(APIView):
         cities = City.objects.all()
         serializer = CityByVenueSerializer(cities, many=True)
         return Response(serializer.data)
+    
+    
+class CreateStopView(generics.CreateAPIView):
+    serializer_class = CreateStopSerializer
+    permission_classes = [permissions.IsAdminUser]
+
+    def post(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        if serializer.is_valid():
+            stop = serializer.save()
+            return Response(self.get_serializer(stop).data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    
+    
+class ListStopView(generics.ListAPIView):
+    serializer_class = ListStopSerializer
+    permission_classes = [permissions.AllowAny]
+    
+    def get_queryset(self):
+        return Venue.objects.prefetch_related('stops').filter(stops__isnull=False).distinct()
+

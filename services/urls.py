@@ -8,6 +8,7 @@ urlpatterns = [
     path('places/venue/', PlaceWiseVenueView.as_view(), name='place-type-detail'),
 #     for venues
     path('venues/', VenueCreateListView.as_view(), name='venue-list'),
+    path('venues/admin/', VenueAdminCreateListView.as_view(), name='venue-admin-list'),
     path('venues/create/', VenueCreateView.as_view(), name='venue-list'),
     path('venues/<int:pk>/', VenueDetailView.as_view(), name='venue-detail'),
     path('venues/update/<int:pk>/', VenueUpdateView.as_view(), name='venue-update'),
@@ -23,4 +24,8 @@ urlpatterns = [
     # for venue messages
     path('venues/message/create/', CreateVenueMessageView.as_view(), name='create-venue-message'),
     path('venues/message/<int:venue_id>/', VenueMessageDetailView.as_view(), name='message-list'),
+    
+    # for stops
+    path('stops/create/', CreateStopView.as_view(), name='create-stop'),
+    path('stops/list/', ListStopView.as_view(), name='stop-list'),
 ]
