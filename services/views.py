@@ -61,6 +61,13 @@ class PlaceTypeView(generics.ListCreateAPIView):
     queryset = PlaceType.objects.all()
     serializer_class = PlaceTypeSerializer
     permission_classes = [permissions.IsAdminUser]
+
+
+class PlaceTypeDetailView(generics.RetrieveUpdateDestroyAPIView):
+    queryset = PlaceType.objects.all()
+    serializer_class = PlaceTypeSerializer
+    permission_classes = [permissions.IsAdminUser]
+    lookup_field = 'pk'
     
     
 class CreateVenueMessageView(generics.ListCreateAPIView):

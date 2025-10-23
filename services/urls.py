@@ -5,6 +5,7 @@ urlpatterns = [
     path('cities/', CityView.as_view(), name='city-list'),
     path('cities/<int:pk>/', CityDeleteUpdateView.as_view(), name='city-detail'),
     path('places/', PlaceTypeView.as_view(), name='place-type-list'),
+    path('places/<int:pk>/', PlaceTypeDetailView.as_view(), name='place-type-detail'),
     path('places/venue/', PlaceWiseVenueView.as_view(), name='place-type-detail'),
 #     for venues
     path('venues/', VenueCreateListView.as_view(), name='venue-list'),
