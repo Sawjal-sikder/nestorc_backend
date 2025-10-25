@@ -28,6 +28,8 @@ class ScavengerHunt(models.Model):
     venue = models.ForeignKey('Venue', related_name='scavenger_hunts', on_delete=models.CASCADE)
     title = models.CharField(max_length=200)
     image = models.ImageField(upload_to="scavenger_hunts/", null=True, blank=True)
+    latitude = models.FloatField()
+    longitude = models.FloatField()
     create_at = models.DateTimeField(auto_now_add=True)
     update_at = models.DateTimeField(auto_now=True)
     

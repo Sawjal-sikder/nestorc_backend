@@ -21,7 +21,7 @@ class PlaceTypeSerializer(serializers.ModelSerializer):
 class ScavengerCreateHuntSerializer(serializers.ModelSerializer):
     class Meta:
         model = ScavengerHunt
-        fields = ['id', 'venue', 'title']
+        fields = ['id', 'venue', 'title', 'latitude', 'longitude']
         
 
 class UserScavengerHuntSerializer(serializers.ModelSerializer):
@@ -36,7 +36,7 @@ class ScavengerHuntSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = ScavengerHunt
-        fields = ["id", "title", "image", "check"]
+        fields = ["id", "title", "image", "latitude", "longitude", "check"]
 
     def get_check(self, obj):
         request = self.context.get("request")
@@ -214,13 +214,13 @@ class CreateVenueSerializer(serializers.ModelSerializer):
         keys_to_remove = []
         for key, value in data.items():
             # Handle scavenger_hunts[index][field] pattern
-            if key.startswith('scavenger_hunts[') and (key.endswith('][title]') or key.endswith('][image]')):
+            if key.startswith('scavenger_hunts[') and (key.endswith('][title]') or key.endswith('][image]') or key.endswith('][latitude]') or key.endswith('][longitude]')):
                 try:
                     # Extract index and field from scavenger_hunts[0][title] or scavenger_hunts[0][image]
                     parts = key.split('[')
                     index = int(parts[1].split(']')[0])
-                    field = parts[2].split(']')[0]  # 'title' or 'image'
-                    
+                    field = parts[2].split(']')[0]  # 'title' or 'image' or 'latitude' or 'longitude'
+
                     # Ensure we have enough items in the list
                     while len(scavenger_hunts) <= index:
                         scavenger_hunts.append({})
@@ -302,10 +302,24 @@ class CreateVenueSerializer(serializers.ModelSerializer):
         # Create scavenger hunts
         for hunt_data in scavenger_hunts_data:
             if 'title' in hunt_data:
+                # Parse latitude/longitude if provided (FormData values may be strings)
+                lat = hunt_data.get('latitude')
+                lon = hunt_data.get('longitude')
+                try:
+                    lat = float(lat) if lat not in (None, '') else 0.0
+                except (TypeError, ValueError):
+                    lat = 0.0
+                try:
+                    lon = float(lon) if lon not in (None, '') else 0.0
+                except (TypeError, ValueError):
+                    lon = 0.0
+
                 ScavengerHunt.objects.create(
                     venue=venue,
                     title=hunt_data['title'],
-                    image=hunt_data.get('image', None)
+                    image=hunt_data.get('image', None),
+                    latitude=lat,
+                    longitude=lon
                 )
         
         # Create venue messages
@@ -383,13 +397,13 @@ class UpdateVenueSerializer(serializers.ModelSerializer):
         keys_to_remove = []
         for key, value in data.items():
             # Handle scavenger_hunts[index][field] pattern
-            if key.startswith('scavenger_hunts[') and (key.endswith('][title]') or key.endswith('][image]')):
+            if key.startswith('scavenger_hunts[') and (key.endswith('][title]') or key.endswith('][image]') or key.endswith('][latitude]') or key.endswith('][longitude]')):
                 try:
                     # Extract index and field from scavenger_hunts[0][title] or scavenger_hunts[0][image]
                     parts = key.split('[')
                     index = int(parts[1].split(']')[0])
-                    field = parts[2].split(']')[0]  # 'title' or 'image'
-                    
+                    field = parts[2].split(']')[0]  # 'title' or 'image' or 'latitude' or 'longitude'
+
                     # Ensure we have enough items in the list
                     while len(scavenger_hunts) <= index:
                         scavenger_hunts.append({})
@@ -478,10 +492,23 @@ class UpdateVenueSerializer(serializers.ModelSerializer):
             # Create new scavenger hunts
             for hunt_data in scavenger_hunts_data:
                 if 'title' in hunt_data:
+                    lat = hunt_data.get('latitude')
+                    lon = hunt_data.get('longitude')
+                    try:
+                        lat = float(lat) if lat not in (None, '') else 0.0
+                    except (TypeError, ValueError):
+                        lat = 0.0
+                    try:
+                        lon = float(lon) if lon not in (None, '') else 0.0
+                    except (TypeError, ValueError):
+                        lon = 0.0
+
                     ScavengerHunt.objects.create(
                         venue=instance,
                         title=hunt_data['title'],
-                        image=hunt_data.get('image', None)
+                        image=hunt_data.get('image', None),
+                        latitude=lat,
+                        longitude=lon
                     )
         
         # Handle venue messages - replace all existing ones
