@@ -24,4 +24,8 @@ urlpatterns = [
     path('auth/users/download/pdf/', download_all_user_view, name='download_all_users_pdf'),
     path('auth/users/download/excel/', download_all_user_excel_view, name='download_all_users_excel'),
     path('auth/users/premium/<int:id>/', UserPermissionPremiumView.as_view(), name='user_premium_status'),
+    
+        # for social login
+    path('auth/google/', GoogleLoginView.as_view(), name='google_login'),
+    path('auth/apple/', AppleLoginView.as_view(), name='apple_login'),
 ]
