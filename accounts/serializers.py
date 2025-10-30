@@ -275,3 +275,9 @@ class UserActivateSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = ['is_active']
+
+class CurrentUserSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = ['id', 'full_name', 'email', 'phone_number', 'profile_image', 'is_active', 'is_premium']
+        

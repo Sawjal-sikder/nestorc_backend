@@ -17,6 +17,7 @@ urlpatterns = [
     path('auth/logout/', LogoutView.as_view(), name='logout'),
     # for admin
     path('auth/users/', UserListView.as_view(), name='user_list'),
+    path('auth/user/details/', CurrentUserView.as_view(), name='current_user'),
     path('auth/users/<int:pk>/', UserDetailsUpdateView.as_view(), name='user_details_update'),
     path('auth/users/update/', UserUpdateView.as_view(), name='user_update'),
     path('auth/users/activate/<int:id>/', UserActivateView.as_view(), name='user_activate'),

@@ -208,3 +208,10 @@ class UserPermissionPremiumView(generics.UpdateAPIView):
             {"detail": f"User premium status updated to {user.is_premium}."},
             status=status.HTTP_200_OK
         )
+
+
+class CurrentUserView(generics.RetrieveAPIView):
+    serializer_class = CurrentUserSerializer
+
+    def get_object(self):
+        return self.request.user
