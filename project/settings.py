@@ -161,7 +161,11 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 
 CORS_ALLOW_ALL_ORIGINS = os.getenv('CORS_ALLOW_ALL_ORIGINS', 'True').lower() == 'true'
-CSRF_TRUSTED_ORIGINS = True
+CSRF_TRUSTED_ORIGINS = [
+    "https://nestocbackend.dsrt321.online",
+    "http://nestocbackend.dsrt321.online",
+]
+
 
 
 
