@@ -316,3 +316,32 @@ class ListStopView(generics.ListAPIView):
     def get_queryset(self):
         return Venue.objects.prefetch_related('stops').filter(stops__isnull=False).distinct()
 
+
+class NearByAttractionView(generics.ListCreateAPIView):
+    queryset = NearByAttraction.objects.all()
+    serializer_class = NearByAttractionSerializer
+    # use formdata and multipart parsers
+    parser_classes = [MultiPartParser, FormParser]
+
+class NearByAttractionDetailView(generics.RetrieveUpdateDestroyAPIView):
+    queryset = NearByAttraction.objects.all()
+    serializer_class = NearByAttractionSerializer
+    
+    def delete(self, request, *args, **kwargs):
+        attraction = self.get_object()
+        attraction.delete()
+        return Response(
+                  {"message": "NearBy Attraction deleted successfully"},
+                  status=status.HTTP_200_OK 
+            )
+    def patch(self, request, *args, **kwargs):
+        attraction = self.get_object()
+        serializer = self.get_serializer(attraction, data=request.data, partial=True)
+        if serializer.is_valid():
+            attraction = serializer.save()
+            return Response({
+                "message": "NearBy Attraction updated successfully",
+                "data": self.get_serializer(attraction).data
+            },
+                            status=status.HTTP_200_OK)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)

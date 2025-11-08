@@ -104,3 +104,21 @@ class LatLng(models.Model):
 
     def __str__(self):
         return f"({self.latitude}, {self.longitude})"
+    
+    
+class NearByAttraction(models.Model):
+    Choice_Category = [
+        ('Arts', 'Arts'),
+        ('Parks', 'Parks'),
+    ]
+    title = models.CharField(max_length=200)
+    description = models.TextField(blank=True, null=True)
+    category = models.CharField(max_length=50, choices=Choice_Category)
+    image = models.ImageField(upload_to='attraction_images/', blank=True, null=True)
+    latitude = models.FloatField()
+    longitude = models.FloatField()
+    create_at = models.DateTimeField(auto_now_add=True)
+    update_at = models.DateTimeField(auto_now=True)
+    
+    def __str__(self):
+        return self.title

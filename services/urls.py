@@ -29,4 +29,8 @@ urlpatterns = [
     # for stops
     path('stops/create/', CreateStopView.as_view(), name='create-stop'),
     path('stops/list/', ListStopView.as_view(), name='stop-list'),
+    
+    # for nearby attractions
+    path('nearby-attractions/', NearByAttractionView.as_view(), name='nearby-attraction'),
+    path('nearby-attractions/<int:pk>/', NearByAttractionDetailView.as_view(), name='nearby-attraction-detail'),
 ]

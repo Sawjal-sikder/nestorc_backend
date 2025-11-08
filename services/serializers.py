@@ -617,3 +617,11 @@ class CityByVenueSerializer(serializers.ModelSerializer):
     def get_venues(self, obj):
         venues = obj.venues.all()[:2]  
         return VenueForCitySerializer(venues, many=True).data
+    
+    
+    
+class NearByAttractionSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = NearByAttraction
+        fields = "__all__"
+        read_only_fields = ["id", "create_at", "update_at"]
