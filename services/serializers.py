@@ -138,27 +138,16 @@ class VenueSerializer(serializers.ModelSerializer):
         ]
 
     def to_representation(self, instance):
-        """
-        Conditionally include scavenger_hunts or stops depending on user's premium status.
-        """
         representation = super().to_representation(instance)
-        representation['is_premium'] = User.objects.get(id=self.context['request'].user.id).is_premium if self.context.get('request') and self.context['request'].user.is_authenticated else False
-        request = self.context.get('request')
+        representation['is_premium'] = bool(representation.get('scavenger_hunts'))
 
-        # Default: non-premium users only get stops
-        if request and hasattr(request, 'user'):
-            user = request.user
-            if user.is_authenticated and user.is_premium:
-                # Premium user → remove stops
-                representation.pop('stops', None)
-            else:
-                # Non-premium user → remove scavenger_hunts
-                representation.pop('scavenger_hunts', None)
+        if representation.get('scavenger_hunts'):
+            representation.pop('stops', None)
         else:
-            # If request missing or user anonymous → show only stops
             representation.pop('scavenger_hunts', None)
 
         return representation
+
 
 
 class CreateVenueSerializer(serializers.ModelSerializer):
