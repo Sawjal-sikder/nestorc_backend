@@ -249,7 +249,7 @@ class NearestVenueView(APIView):
             distance = haversine(user_lat, user_lon, v.latitude, v.longitude)
             venue_list.append({
                 "id": v.id,
-                "city": v.city_id,
+                "city": v.city.name if v.city else None,
                 "venue_name": v.venue_name,
                 "image": v.image.url if v.image else None,
                 "latitude": v.latitude,
