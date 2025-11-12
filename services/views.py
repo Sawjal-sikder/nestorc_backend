@@ -237,11 +237,14 @@ class NearestVenueView(APIView):
             user_lat = float(request.query_params.get("lat"))
             user_lon = float(request.query_params.get("lon"))
         except (TypeError, ValueError):
-            return Response({"error": "lat and lon query parameters are required"}, status=status.HTTP_400_BAD_REQUEST)
+            return Response(
+                {"error": "lat and lon query parameters are required"},
+                status=status.HTTP_400_BAD_REQUEST
+            )
 
-        venues = Venue.objects.all()
-
+        venues = Venue.objects.select_related('city').all()
         venue_list = []
+
         for v in venues:
             distance = haversine(user_lat, user_lon, v.latitude, v.longitude)
             venue_list.append({
@@ -254,10 +257,20 @@ class NearestVenueView(APIView):
                 "distance_km": round(distance, 2),
             })
 
-        # Sort by distance and get nearest 2
+        # Sort by distance and take nearest 2
         nearest = sorted(venue_list, key=lambda x: x["distance_km"])[:2]
 
-        return Response(nearest, status=status.HTTP_200_OK)
+        # Get city name (if available)
+        city_name = None
+        if nearest:
+            first_city = Venue.objects.filter(id=nearest[0]["id"]).select_related('city').first()
+            if first_city and first_city.city:
+                city_name = first_city.city.name
+
+        return Response({
+            "city": city_name,
+            "nearest_venues": nearest
+        }, status=status.HTTP_200_OK)
 
 
 class NearestVenueTenView(APIView):
