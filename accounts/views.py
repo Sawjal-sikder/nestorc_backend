@@ -1,13 +1,13 @@
+from .serializers import *
 from warnings import filters
-from rest_framework import generics, status, permissions, filters
+from jsonschema import ValidationError
 from rest_framework.response import Response
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework_simplejwt.exceptions import TokenError
-from accounts.export_report import download_all_user_excel, download_all_user_pdf
 from rest_framework.parsers import MultiPartParser, FormParser
 from rest_framework_simplejwt.views import TokenObtainPairView
-
-from .serializers import *
+from rest_framework import generics, status, permissions, filters
+from accounts.export_report import download_all_user_excel, download_all_user_pdf
 
 
 class CustomTokenObtainPairView(TokenObtainPairView):
@@ -219,3 +219,25 @@ class CurrentUserView(generics.RetrieveAPIView):
     
     
 
+class DeleteAccountView(generics.DestroyAPIView):
+
+    def get_object(self):
+        # Get the user making the request
+        user = self.request.user
+        password = self.request.data.get("password")
+        conform_password = self.request.data.get("conform_password")
+        
+        # Validate password and conform_password
+        if not password or not conform_password:
+            raise ValidationError({"detail": "Both password and conform_password are required."})
+        if password != conform_password:
+            raise ValidationError({"detail": "Passwords do not match."})
+        if user.check_password(password) is False:
+            raise ValidationError({"detail": "Incorrect password."})
+        return user
+    
+    # account deletion
+    def delete(self, request, *args, **kwargs):
+        user = self.get_object()
+        user.delete()
+        return Response({"detail": "Account deleted successfully."}, status=status.HTTP_204_NO_CONTENT)

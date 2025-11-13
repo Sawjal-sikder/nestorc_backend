@@ -16,6 +16,7 @@ urlpatterns = [
     path('auth/set_new_password/', SetNewPasswordView.as_view(), name='set_new_password'),
     path('auth/change-password/', ChangePasswordView.as_view(), name='change-password'),
     path('auth/logout/', LogoutView.as_view(), name='logout'),
+    path("auth/account-delete/", DeleteAccountView.as_view(), name="account-delete"),
     # for admin
     path('auth/users/', UserListView.as_view(), name='user_list'),
     path('auth/user/details/', CurrentUserView.as_view(), name='current_user'),
