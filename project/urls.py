@@ -13,6 +13,7 @@ urlpatterns = [
     path('accounts/', include('allauth.urls')),
     path('api/services/', include('services.urls')),
     path('', lambda request: HttpResponseRedirect('/api/auth/register/')),
+    path('', include('privacy.urls')),
 
 ]
 

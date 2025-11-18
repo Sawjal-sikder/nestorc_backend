@@ -40,6 +40,7 @@ INSTALLED_APPS = [
     # for app
     'accounts',
     'services',
+    'privacy',
        
 ]
 
