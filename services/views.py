@@ -258,7 +258,16 @@ class NearestVenueView(APIView):
             })
 
         # Sort by distance and take nearest 2
-        nearest = sorted(venue_list, key=lambda x: x["distance_km"])[:2]
+        # nearest = sorted(venue_list, key=lambda x: x["distance_km"])[:2]
+        
+        # Sort by 1) city 2) distance
+        sorted_list = sorted(
+            venue_list,
+            key=lambda x: (x["city"] or "", x["distance_km"])
+        )
+
+        # Take nearest 2 after sorting
+        nearest = sorted_list[:2]
 
         # Get city name (if available)
         city_name = None
