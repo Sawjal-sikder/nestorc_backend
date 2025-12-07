@@ -8,3 +8,7 @@ def privacy_policy(request):
 
 def accountdeleteView(request):
     return render(request, 'accountDelete.html')
+
+
+def supportView(request):
+    return render(request, 'support.html')
