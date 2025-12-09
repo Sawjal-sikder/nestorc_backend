@@ -232,6 +232,8 @@ class GeoFencedDetailView(generics.RetrieveUpdateDestroyAPIView):
 
 
 class NearestVenueView(APIView):
+    permission_classes = [permissions.AllowAny]
+    
     def get(self, request):
         try:
             user_lat = float(request.query_params.get("lat"))
@@ -342,6 +344,7 @@ class ListStopView(generics.ListAPIView):
 class NearByAttractionView(generics.ListCreateAPIView):
     queryset = NearByAttraction.objects.all()
     serializer_class = NearByAttractionSerializer
+    permission_classes = [permissions.AllowAny]
     # use formdata and multipart parsers
     parser_classes = [MultiPartParser, FormParser]
 
