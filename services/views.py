@@ -167,7 +167,7 @@ class VenueUpdateView(generics.RetrieveUpdateAPIView):
 class VenueDetailView(generics.RetrieveUpdateDestroyAPIView):
     queryset = Venue.objects.all()
     serializer_class = VenueSerializer
-    permissions_classes = [permissions.AllowAny]
+    permission_classes = [permissions.AllowAny]
   
   
 class VenueByCityView(generics.ListAPIView):
@@ -352,7 +352,7 @@ class NearByAttractionView(generics.ListCreateAPIView):
 class NearByAttractionDetailView(generics.RetrieveUpdateDestroyAPIView):
     queryset = NearByAttraction.objects.all()
     serializer_class = NearByAttractionSerializer
-    permissions_classes = [permissions.AllowAny]
+    permission_classes = [permissions.AllowAny]
     
     def delete(self, request, *args, **kwargs):
         attraction = self.get_object()
