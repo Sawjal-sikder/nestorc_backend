@@ -230,10 +230,9 @@ class GeoFencedDetailView(generics.RetrieveUpdateDestroyAPIView):
     queryset = GeoFenced.objects.all()
     serializer_class = GeoFencedSerializer
 
-
 class NearestVenueView(APIView):
     permission_classes = [permissions.AllowAny]
-    
+
     def get(self, request):
         try:
             user_lat = float(request.query_params.get("lat"))
@@ -259,19 +258,13 @@ class NearestVenueView(APIView):
                 "distance_km": round(distance, 2),
             })
 
-        # Sort by distance and take nearest 2
-        # nearest = sorted(venue_list, key=lambda x: x["distance_km"])[:2]
-        
-        # Sort by 1) city 2) distance
-        sorted_list = sorted(
-            venue_list,
-            key=lambda x: (x["city"] or "", x["distance_km"])
-        )
+        # Sort by distance only
+        sorted_list = sorted(venue_list, key=lambda x: x["distance_km"])
 
-        # Take nearest 2 after sorting
+        # Take nearest 2 venues after sorting by distance
         nearest = sorted_list[:2]
 
-        # Get city name (if available)
+        # Get city name for the closest venue
         city_name = None
         if nearest:
             first_city = Venue.objects.filter(id=nearest[0]["id"]).select_related('city').first()
@@ -282,6 +275,7 @@ class NearestVenueView(APIView):
             "city": city_name,
             "nearest_venues": nearest
         }, status=status.HTTP_200_OK)
+
 
 
 class NearestVenueTenView(APIView):
